@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { Button, TextInput } from 'react-native-paper';
 import { auth } from './Firebase';
-
+import { signInWithPhoneNumber, PhoneAuthProvider } from 'firebase/auth';
 
 
 export default function Intro() {
@@ -23,7 +23,8 @@ export default function Intro() {
 
   const sendVerificationCode = async () => {
     try {
-      const confirmation = await auth().signInWithPhoneNumber(phoneNumber);
+      // Use signInWithPhoneNumber directly
+      const confirmation = await signInWithPhoneNumber(auth, phoneNumber);
       setVerificationId(confirmation.verificationId);
     } catch (error) {
       console.error('Verification code send failed', error);
@@ -32,10 +33,11 @@ export default function Intro() {
 
   const confirmVerificationCode = async () => {
     try {
-      const credential = auth.PhoneAuthProvider.credential(verificationId, verificationCode);
-      await auth().signInWithCredential(credential);
+      // Use PhoneAuthProvider directly
+      const credential = PhoneAuthProvider.credential(verificationId, verificationCode);
+      await auth.signInWithCredential(credential);
       setSignUpModalVisible(false);
-      // 회원가입 성공 후 처리
+      // ... other code
     } catch (error) {
       console.error('Verification code confirmation failed', error);
     }
@@ -99,7 +101,6 @@ export default function Intro() {
             </Button>
             {verificationId ? (
               <Button mode="contained" onPress={confirmVerificationCode}>
-
                 인증코드 확인
               </Button>
             ) : null}
