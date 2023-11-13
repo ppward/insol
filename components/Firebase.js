@@ -1,9 +1,7 @@
 // Firebase.js
-import { getAuth } from "firebase/auth";
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-import { getFirestore } from "firebase/firestore";
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { initializeApp } from 'firebase/app';
+import { getAuth, initializeAuth, getReactNativePersistence } from 'firebase/auth';
 
 const firebaseConfig = {
     apiKey: "AIzaSyA5zILBB4bXwuczgihWqHx28pZvAXpwUmI",
@@ -14,12 +12,13 @@ const firebaseConfig = {
     appId: "1:368701358613:web:5b319cb5573fff5ec2041c",
     measurementId: "G-YT7FLJSQ49"
 };
-
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
-const db = getFirestore(app);
-const getFirebase = () => app;
+
+// Analytics가 지원되는 경우에만 초기화
+initializeAuth(app, {
+    persistence: getReactNativePersistence(AsyncStorage)
+});
+
 const auth = getAuth(app);
 
-export { app, analytics,db ,auth, getFirebase };
+export { auth };
