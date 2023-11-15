@@ -9,39 +9,55 @@ import {
   Dimensions,
 } from 'react-native';
 import { Button, TextInput } from 'react-native-paper';
-import { auth } from './Firebase';
-import { signInWithPhoneNumber, PhoneAuthProvider } from 'firebase/auth';
+import { Picker } from '@react-native-picker/picker'; // Make sure this line is included
+import auth from '@react-native-firebase/auth';
+import { database } from '@react-native-firebase/database';
+import { ref, set } from 'firebase/database';
 
 
 export default function Intro() {
   const [modalVisible, setModalVisible] = useState(false);
   const [signUpModalVisible, setSignUpModalVisible] = useState(false);
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [verificationId, setVerificationId] = useState('');
-  const [verificationCode, setVerificationCode] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const chartWidth = Dimensions.get('window').width;
+  const [role, setRole] = useState('');
+  
 
-  const sendVerificationCode = async () => {
+  const signInWithEmail = async () => {
     try {
-      // Use signInWithPhoneNumber directly
-      const confirmation = await signInWithPhoneNumber(auth, phoneNumber);
-      setVerificationId(confirmation.verificationId);
+      await auth().signInWithEmailAndPassword(email, password);
+      setModalVisible(false);
+      // Post authentication success actions
     } catch (error) {
-      console.error('Verification code send failed', error);
+      console.error('Login failed', error);
+      // Handle login error (e.g., show an alert or update the UI)
     }
   };
-
-  const confirmVerificationCode = async () => {
+  const signUpWithEmail = async () => {
+    if (!role) {
+      alert('역할을 선택해주세요.');
+      return;
+    }
+  
     try {
-      // Use PhoneAuthProvider directly
-      const credential = PhoneAuthProvider.credential(verificationId, verificationCode);
-      await auth.signInWithCredential(credential);
+      const userCredential = await auth().createUserWithEmailAndPassword(email, password);
+      const userId = userCredential.user.uid;
+      console.log('Saving user data:', { email, role });
+  
+      await set(ref(database, 'users/' + userId), {
+        email: email,
+        role: role,
+      });
+  
+      console.log('User data saved successfully');
       setSignUpModalVisible(false);
-      // ... other code
     } catch (error) {
-      console.error('Verification code confirmation failed', error);
+      console.error('Signup failed', error);
     }
   };
+  
+  
 
   return (
     <View style={{ ...styles.container, backgroundColor: 'rgb(177,168,235)' }}>
@@ -60,17 +76,19 @@ export default function Intro() {
         <View style={styles.container}>
           <View style={styles.modalView}>
             <TextInput
-              label="Username"
-              value={phoneNumber}  // 이 부분은 원래대로 username 상태를 사용해야 합니다
-              onChangeText={setPhoneNumber}  // 이 부분도 원래대로 setUsername 함수를 사용해야 합니다
+              label="Email"
+              value={email}
+              onChangeText={setEmail}
               style={styles.modalText}
             />
             <TextInput
               label="Password"
+              value={password}
+              onChangeText={setPassword}
               secureTextEntry
               style={styles.modalText}
             />
-            <Button mode="contained" onPress={() => setModalVisible(false)}>
+            <Button mode="contained" onPress={signInWithEmail}>
               로그인
             </Button>
             <Button onPress={() => setSignUpModalVisible(true)}>회원가입</Button>
@@ -83,27 +101,31 @@ export default function Intro() {
         <View style={styles.container}>
           <View style={styles.modalView}>
             <TextInput
-              label="Phone Number"
-              value={phoneNumber}
-              onChangeText={setPhoneNumber}
+              label="Email"
+              value={email}
+              onChangeText={setEmail}
               style={styles.modalText}
             />
-            {verificationId ? (
-              <TextInput
-                label="Verification Code"
-                value={verificationCode}
-                onChangeText={setVerificationCode}
-                style={styles.modalText}
-              />
-            ) : null}
-            <Button mode="contained" onPress={sendVerificationCode}>
-              인증코드 보내기
+            <TextInput
+              label="Password"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+              style={styles.modalText}
+            />
+            <Picker
+              selectedValue={role}
+              onValueChange={(itemValue, itemIndex) => setRole(itemValue)}
+            >
+              <Picker.Item label="선생님" value="teacher" />
+              <Picker.Item label="학생" value="student" />
+              <Picker.Item label="학부모" value="parent" />
+              <Picker.Item label="버스기사" value="busDriver" />
+            </Picker>
+
+            <Button mode="contained" onPress={signUpWithEmail}>
+              회원가입
             </Button>
-            {verificationId ? (
-              <Button mode="contained" onPress={confirmVerificationCode}>
-                인증코드 확인
-              </Button>
-            ) : null}
             <Button onPress={() => setSignUpModalVisible(false)}>Cancel</Button>
           </View>
         </View>

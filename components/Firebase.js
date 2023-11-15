@@ -10,7 +10,8 @@ const firebaseConfig = {
     storageBucket: "insol-301b9.appspot.com",
     messagingSenderId: "368701358613",
     appId: "1:368701358613:web:5b319cb5573fff5ec2041c",
-    measurementId: "G-YT7FLJSQ49"
+    measurementId: "G-YT7FLJSQ49",
+    databaseURL: "https://insol-301b9.firebaseio.com"
 };
 const app = initializeApp(firebaseConfig);
 
