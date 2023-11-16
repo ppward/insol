@@ -9,11 +9,19 @@ export default function Screen() {
     <NavigationContainer>
       <Stack.Navigator>
         <Stack.Screen
-          options={{
-            headerShown: false,
-          }}
-          name="인트로"
+          name="Intro"
           component={Intro}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="SignUp"
+          component={SignUpScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen 
+          name="EmailSignUp" 
+          component={EmailSignUp} 
+          options={{ headerShown: false }}
         />
       </Stack.Navigator>
     </NavigationContainer>

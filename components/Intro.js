@@ -50,10 +50,10 @@ export default function Intro() {
         }}>
         <View style={{alignItems: 'center'}}>
           <Text style={styles.header}>인솔</Text>
-          <Text style={{top: 50, fontSize: 28}}>[ insol ]</Text>
+          <Text style={{ top: 50, fontSize: 28 }}>[ insol ]</Text>
           <Image
             source={require('../assets/7605994.jpg')}
-            style={{top: '20%', width: chartWidth, height: chartWidth}}
+            style={{ top: '20%', width: chartWidth, height: chartWidth }}
           />
         </View>
 
@@ -64,24 +64,17 @@ export default function Intro() {
     </TouchableWithoutFeedback>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: 'rgb(177,168,235)',
   },
   header: {
     top: 30,
     fontSize: 60,
     fontWeight: 'bold',
-  },
-  background: {
-    flex: 1,
-    resizeMode: 'cover',
-    justifyContent: 'center',
-  },
-  modalText: {
-    borderRadius: 4,
-    margin: 5,
   },
 });
