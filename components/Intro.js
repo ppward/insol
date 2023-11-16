@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, {useRef} from 'react';
 import {
   View,
   Text,
@@ -8,25 +8,46 @@ import {
   TouchableOpacity,
   Modal,
   Dimensions,
+  ScrollView,
+  TouchableWithoutFeedback,
 } from 'react-native';
+import {Modalize} from 'react-native-modalize';
 import {Button, TextInput, Provider as PaperProvider} from 'react-native-paper';
+
 export default function Intro() {
   const chartHeight = Dimensions.get('window').height;
   const chartWidth = Dimensions.get('window').width;
-  const [modalVisible, setModalVisible] = React.useState(false);
+
   const [username, setUsername] = React.useState('');
   const [password, setPassword] = React.useState('');
 
+  const modalizeRef = useRef(null);
+  const onOpen = () => {
+    modalizeRef.current?.open();
+  };
+  function ModalContent() {
+    return (
+      <ScrollView>
+        <TouchableOpacity>
+          <View>
+            <Text>로그인</Text>
+          </View>
+        </TouchableOpacity>
+        <TouchableOpacity>
+          <View>
+            <Text>회원가입</Text>
+          </View>
+        </TouchableOpacity>
+      </ScrollView>
+    );
+  }
   return (
-    <View
-      style={{
-        ...styles.container,
-        backgroundColor: 'rgb(177,168,235)',
-      }}>
-      <TouchableOpacity
-        onPressIn={() =>
-          modalVisible ? setModalVisible(false) : setModalVisible(true)
-        }>
+    <TouchableWithoutFeedback onpress={() => onOpen()}>
+      <View
+        style={{
+          ...styles.container,
+          backgroundColor: 'rgb(177,168,235)',
+        }}>
         <View style={{alignItems: 'center'}}>
           <Text style={styles.header}>인솔</Text>
           <Text style={{top: 50, fontSize: 28}}>[ insol ]</Text>
@@ -35,61 +56,12 @@ export default function Intro() {
             style={{top: '20%', width: chartWidth, height: chartWidth}}
           />
         </View>
-      </TouchableOpacity>
 
-      <Modal animationType="slide" transparent={true} visible={modalVisible}>
-        <View style={styles.container}>
-          <View
-            style={{
-              backgroundColor: 'white',
-              padding: 20,
-              width: '80%',
-              borderRadius: 25,
-            }}>
-            <TextInput
-              label="+82)10-0000-0000"
-              value={username}
-              onChangeText={setUsername}
-              style={styles.modalText}
-            />
-            <TextInput
-              label="Password"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-              style={styles.modalText}
-            />
-
-            {/* Submit Button */}
-            <Button
-              mode="contained"
-              onPress={() => {
-                // Here you can handle the login logic
-                console.log(username);
-                console.log(password);
-
-                // Close the modal after login
-                setModalVisible(false);
-              }}>
-              로그인
-            </Button>
-
-            {/* Cancel Button */}
-            <Button
-              onPress={() => {
-                // Clear input fields when canceling
-                setUsername('');
-                setPassword('');
-
-                // Close the modal
-                setModalVisible(false);
-              }}>
-              Cancel
-            </Button>
-          </View>
-        </View>
-      </Modal>
-    </View>
+        <Modalize ref={modalizeRef}>
+          <ModalContent />
+        </Modalize>
+      </View>
+    </TouchableWithoutFeedback>
   );
 }
 const styles = StyleSheet.create({
