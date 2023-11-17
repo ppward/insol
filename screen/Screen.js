@@ -2,6 +2,8 @@ import 'react-native-gesture-handler';
 import {NavigationContainer} from '@react-navigation/native';
 import {createStackNavigator} from '@react-navigation/stack';
 import Intro from '../components/Intro';
+import SignUpScreen from './SignUpScreen';
+import EmailSignUp from './EmailSignUp';
 const Stack = createStackNavigator();
 
 export default function Screen() {
@@ -11,17 +13,17 @@ export default function Screen() {
         <Stack.Screen
           name="Intro"
           component={Intro}
-          options={{ headerShown: false }}
+          options={{headerShown: false}}
         />
         <Stack.Screen
           name="SignUp"
           component={SignUpScreen}
-          options={{ headerShown: false }}
+          options={{headerShown: false}}
         />
-        <Stack.Screen 
-          name="EmailSignUp" 
-          component={EmailSignUp} 
-          options={{ headerShown: false }}
+        <Stack.Screen
+          name="EmailSignUp"
+          component={EmailSignUp}
+          options={{headerShown: false}}
         />
       </Stack.Navigator>
     </NavigationContainer>
