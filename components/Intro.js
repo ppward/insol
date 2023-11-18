@@ -42,7 +42,7 @@ export default function Intro() {
     );
   }
   return (
-    <TouchableWithoutFeedback onpress={() => onOpen()}>
+    <TouchableWithoutFeedback onPress={() => onOpen()}>
       <View
         style={{
           ...styles.container,
@@ -50,10 +50,10 @@ export default function Intro() {
         }}>
         <View style={{alignItems: 'center'}}>
           <Text style={styles.header}>인솔</Text>
-          <Text style={{ top: 50, fontSize: 28 }}>[ insol ]</Text>
+          <Text style={{top: 50, fontSize: 28}}>[ insol ]</Text>
           <Image
             source={require('../assets/7605994.jpg')}
-            style={{ top: '20%', width: chartWidth, height: chartWidth }}
+            style={{top: '20%', width: chartWidth, height: chartWidth}}
           />
         </View>
 
