@@ -10,14 +10,12 @@ import {
   SafeAreaView,
   Alert,
   Dimensions,
-  Keyboard,
+  TouchableWithoutFeedback,
 } from 'react-native';
-import {Button} from 'react-native-paper';
 import {auth} from '../components/Firebase'; // Make sure to import the auth instance
 import {createUserWithEmailAndPassword} from 'firebase/auth';
 import {firestore} from '../components/Firebase'; // Make sure to import the firestore instance
 import {doc, setDoc} from 'firebase/firestore';
-import {TouchableWithoutFeedback} from 'react-native-gesture-handler';
 
 const SignUpScreen = ({navigation}) => {
   const [modalVisible, setModalVisible] = useState(false);
@@ -25,6 +23,10 @@ const SignUpScreen = ({navigation}) => {
   const [inputPassword, setInputPassword] = useState('');
   const [inputName, setInputName] = useState('');
   const [inputClass, setInputClass] = useState('');
+  const [inputJob, setInputJob] = useState('');
+  const closeModal = () => {
+    setModalVisible(false);
+  };
 
   const handleSignUp = async () => {
     try {
@@ -34,19 +36,25 @@ const SignUpScreen = ({navigation}) => {
         inputPassword,
       );
       const user = userCredential.user;
-      // Use Firestore's setDoc method to set the user document
       await setDoc(doc(firestore, 'users', user.uid), {
         email: inputEmail,
         class: inputClass,
         name: inputName,
       });
       Alert.alert('Success', 'User registered successfully');
-      // Optional: navigate to the next screen
+
+      // 회원가입 완료 후 Intro 페이지로 이동
+      navigation.navigate('Intro'); // 'Intro'는 여러분의 네비게이터에 정의된 페이지 이름으로 바꿔주세요.
     } catch (error) {
       const errorCode = error.code;
       const errorMessage = error.message;
       Alert.alert('Error', errorCode + ': ' + errorMessage);
     }
+  };
+
+  const handleLoginPress = job => {
+    setInputJob(job); // 직업 상태 설정
+    setModalVisible(true); // 모달 열기
   };
 
   return (
@@ -55,7 +63,7 @@ const SignUpScreen = ({navigation}) => {
         <View style={styles.quadrant}>
           <TouchableOpacity
             style={styles.signupButton}
-            onPress={() => setModalVisible(true)}>
+            onPress={() => handleLoginPress('선생님')}>
             <Image
               source={require('../image/선생님.png')}
               style={styles.image}
@@ -65,7 +73,9 @@ const SignUpScreen = ({navigation}) => {
         </View>
 
         <View style={styles.quadrant}>
-          <TouchableOpacity onPress={() => setModalVisible(true)}>
+          <TouchableOpacity
+            style={styles.signupButton}
+            onPress={() => handleLoginPress('학생')}>
             <View style={styles.signupButton}>
               <Image
                 source={require('../image/학생.png')}
@@ -81,7 +91,7 @@ const SignUpScreen = ({navigation}) => {
         <View style={styles.quadrant}>
           <TouchableOpacity
             style={styles.signupButton}
-            onPress={() => setModalVisible(true)}>
+            onPress={() => handleLoginPress('학부모')}>
             <Image
               source={require('../image/부모님.png')}
               style={styles.image}
@@ -93,55 +103,66 @@ const SignUpScreen = ({navigation}) => {
         <View style={styles.quadrant}>
           <TouchableOpacity
             style={styles.signupButton}
-            onPress={() => setModalVisible(true)}>
+            onPress={() => handleLoginPress('버스기사')}>
             <Image source={require('../image/버스.png')} style={styles.image} />
             <Text style={styles.label}>버스기사 로그인</Text>
           </TouchableOpacity>
         </View>
       </View>
 
-      <TouchableWithoutFeedback
-        onPress={() => {
-          setModalVisible(false);
-        }}>
-        <Modal
-          animationType="slide"
-          transparent={true}
-          visible={modalVisible}
-          onRequestClose={() => setModalVisible(!modalVisible)}>
-          <View style={styles.centeredView}>
-            <TextInput
-              style={styles.input}
-              onChangeText={setInputEmail}
-              value={inputEmail}
-              placeholder="이메일"
-              placeholderTextColor="#C7C7CD"
-            />
-            <TextInput
-              style={styles.input}
-              onChangeText={setInputPassword}
-              value={inputPassword}
-              placeholder="비밀번호"
-              placeholderTextColor="#C7C7CD"
-            />
-            <TextInput
-              style={styles.input}
-              onChangeText={setInputName}
-              value={inputName}
-              placeholder="이름"
-              placeholderTextColor="#C7C7CD"
-            />
-            <TextInput
-              style={styles.input}
-              onChangeText={setInputClass}
-              value={inputClass}
-              placeholder="반 이름"
-              placeholderTextColor="#C7C7CD"
-            />
-            <Button onPress={handleSignUp}>회원가입</Button>
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(!modalVisible)}>
+        <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalView}>
+              <TextInput
+                style={styles.input}
+                onChangeText={setInputEmail}
+                value={inputEmail}
+                placeholder="이메일"
+                placeholderTextColor="#C7C7CD"
+              />
+              <TextInput
+                style={styles.input}
+                onChangeText={setInputPassword}
+                value={inputPassword}
+                placeholder="비밀번호"
+                placeholderTextColor="#C7C7CD"
+              />
+              <TextInput
+                style={styles.input}
+                onChangeText={setInputName}
+                value={inputName}
+                placeholder="이름"
+                placeholderTextColor="#C7C7CD"
+              />
+              <TextInput
+                style={styles.input}
+                onChangeText={setInputClass}
+                value={inputClass}
+                placeholder="반 이름"
+                placeholderTextColor="#C7C7CD"
+              />
+              <TouchableOpacity onPress={handleSignUp}>
+                <View
+                  style={{
+                    width: 150,
+                    height: 30,
+                    borderRadius: 8,
+                    backgroundColor: '#fff',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}>
+                  <Text>회원가입</Text>
+                </View>
+              </TouchableOpacity>
+            </View>
           </View>
-        </Modal>
-      </TouchableWithoutFeedback>
+        </TouchableWithoutFeedback>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -151,6 +172,21 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'column',
     backgroundColor: '#B1A8EB',
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)', // 반투명 배경
+  },
+  modalView: {
+    width: 320, // 모달창의 너비를 300으로 설정
+    height: 400, // 모달창의 높이를 400으로 설정
+    backgroundColor: 'rgba(255,255,255,0)',
+    borderRadius: 20,
+    padding: 35,
+    alignItems: 'center',
+    justifyContent: 'center', // 내용을 중앙에 정렬
   },
   half: {
     flex: 1,
@@ -183,14 +219,12 @@ const styles = StyleSheet.create({
   },
   centeredView: {
     flex: 1,
-    width: '320',
-    height: '80%',
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 22,
   },
   input: {
-    width: '50%',
+    width: 200,
     height: 50,
     marginTop: 20,
     marginBottom: 20,
