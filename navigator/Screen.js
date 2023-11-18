@@ -1,9 +1,9 @@
 import 'react-native-gesture-handler';
 import {NavigationContainer} from '@react-navigation/native';
 import {createStackNavigator} from '@react-navigation/stack';
-import Intro from '../components/Intro';
-import SignUpScreen from './SignUpScreen';
-import EmailSignUp from './EmailSignUp';
+import Intro from './components/Intro';
+import SignUpScreen from './screen/SignUpScreen';
+import EmailSignUp from './screen/EmailSignUp';
 const Stack = createStackNavigator();
 
 export default function Screen() {
