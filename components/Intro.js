@@ -1,4 +1,4 @@
-import React, {useRef} from 'react';
+import React, { useRef } from 'react';
 import {
   View,
   Text,
@@ -6,28 +6,27 @@ import {
   StyleSheet,
   ImageBackground,
   TouchableOpacity,
-  Modal,
   Dimensions,
   ScrollView,
   TouchableWithoutFeedback,
 } from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import {Modalize} from 'react-native-modalize';
-import {Button, TextInput, Provider as PaperProvider} from 'react-native-paper';
-import {transparent} from 'react-native-paper/lib/typescript/styles/themes/v2/colors';
+
 
 const device_Height = Dimensions.get('window').height;
 const device_Width = Dimensions.get('window').width;
 
 export default function Intro() {
   const navigation = useNavigation();
-  const [username, setUsername] = React.useState('');
-  const [password, setPassword] = React.useState('');
-
   const modalizeRef = useRef(null);
+
   const onOpen = () => {
-    modalizeRef.current?.open();
+    if (modalizeRef.current) {
+      modalizeRef.current.open();
+    }
   };
+
   function ModalContent() {
     return (
       <ScrollView
@@ -35,7 +34,7 @@ export default function Intro() {
           alignItems: 'center',
           justifyContent: 'center',
         }}>
-        <TouchableOpacity style={{marginTop: 150}}>
+        <TouchableOpacity style={{marginTop: 150}} onPress={() => navigation.navigate('Login')}>
           <View style={styles.modalButton}>
             <Text style={styles.modalButtonText}>로그인</Text>
           </View>
@@ -50,13 +49,10 @@ export default function Intro() {
       </ScrollView>
     );
   }
+
   return (
-    <TouchableWithoutFeedback onPress={() => onOpen()}>
-      <View
-        style={{
-          ...styles.container,
-          backgroundColor: 'rgb(177,168,235)',
-        }}>
+    <TouchableWithoutFeedback onPress={onOpen}>
+      <View style={styles.container}>
         <View style={{alignItems: 'center'}}>
           <Text style={styles.header}>인솔</Text>
           <Text style={{top: 50, fontSize: 28}}>[ insol ]</Text>
@@ -67,9 +63,9 @@ export default function Intro() {
         </View>
 
         <Modalize
-          snapPoint={device_Height / 2}
           ref={modalizeRef}
-          modalStyle={{backgroundColor: 'rgba(255,255,255,0.5)'}}>
+          snapPoint={device_Height / 2}
+          modalStyle={{backgroundColor: 'rgba(255, 255, 255, 0.5)'}}>
           <ModalContent />
         </Modalize>
       </View>
