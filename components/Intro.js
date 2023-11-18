@@ -34,14 +34,12 @@ export default function Intro() {
         }}>
         <TouchableOpacity
           style={{marginTop: 150}}
-          onPress={() => navigation.navigate('Login')}>
+          onPress={() => navigation.navigate('login')}>
           <View style={styles.modalButton}>
             <Text style={styles.modalButtonText}>로그인</Text>
           </View>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={{marginTop: 30}}
-          onPress={() => navigation.navigate('SignUp')}>
+        <TouchableOpacity style={{marginTop: 30}}>
           <View style={styles.modalButton}>
             <Text style={styles.modalButtonText}>회원가입</Text>
           </View>

@@ -3,6 +3,7 @@ import {NavigationContainer} from '@react-navigation/native';
 import {createStackNavigator} from '@react-navigation/stack';
 import Intro from '../components/Intro';
 import SignUpScreen from '../screen/SignUpScreen';
+import TabNav from './TabNav';
 const Stack = createStackNavigator();
 
 export default function StackNav() {
@@ -17,6 +18,11 @@ export default function StackNav() {
         <Stack.Screen
           name="SignUp"
           component={SignUpScreen}
+          options={{headerShown: false}}
+        />
+        <Stack.Screen
+          name="Tab"
+          component={TabNav}
           options={{headerShown: false}}
         />
       </Stack.Navigator>
