@@ -8,55 +8,76 @@ import {
     Modal,
     TextInput,
     SafeAreaView,
-    Dimensions,
+    Alert,
 } from 'react-native';
 import { Button } from 'react-native-paper';
-
-
-const itheight = Dimensions.get("window").height;
+import { auth } from '../components/Firebase'; // Make sure to import the auth instance
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { firestore } from '../components/Firebase'; // Make sure to import the firestore instance
+import { doc, setDoc } from 'firebase/firestore';
 
 const SignUpScreen = ({ navigation }) => {
     const [modalVisible, setModalVisible] = useState(false);
+    const [inputEmail, setInputEmail] = useState('');
+    const [inputPassword, setInputPassword] = useState('');
     const [inputName, setInputName] = useState('');
     const [inputClass, setInputClass] = useState('');
-    const [inputNumber, setInputNumber] = useState('');
+
+    const handleSignUp = async () => {
+        try {
+            const userCredential = await createUserWithEmailAndPassword(auth, inputEmail, inputPassword);
+            const user = userCredential.user;
+            // Use Firestore's setDoc method to set the user document
+            await setDoc(doc(firestore, "users", user.uid), {
+                email: inputEmail,
+                class: inputClass,
+                name: inputName,
+            });
+            Alert.alert("Success", "User registered successfully");
+            // Optional: navigate to the next screen
+        } catch (error) {
+            const errorCode = error.code;
+            const errorMessage = error.message;
+            Alert.alert("Error", errorCode + ": " + errorMessage);
+        }
+    };
 
     return (
         <SafeAreaView style={styles.container}>
-            <View style={{ ...styles.half, alignItems: 'flex-end' }}>
-                <View style={{ ...styles.quadrant }}>
-                    <TouchableOpacity style={styles.signupButton} onPress={() => { setModalVisible(true) }}>
-
+            <View style={styles.half}>
+                <View style={styles.quadrant}>
+                    <TouchableOpacity style={styles.signupButton} onPress={() => setModalVisible(true)}>
                         <Image source={require('../image/선생님.png')} style={styles.image} />
                         <Text style={styles.label}>선생님 로그인</Text>
                     </TouchableOpacity>
                 </View>
 
                 <View style={styles.quadrant}>
-                    <TouchableOpacity onPress={() => { setModalVisible(true) }} >
+                    <TouchableOpacity onPress={() => setModalVisible(true)}>
                         <View style={styles.signupButton}>
-                            <Image source={require('../image/학생.png')} style={{ ...styles.image }} />
+                            <Image source={require('../image/학생.png')} style={styles.image} />
                             <Text style={styles.label}>학생 로그인</Text>
                         </View>
                     </TouchableOpacity>
                 </View>
             </View>
-            <View style={{ ...styles.half, alignItems: 'flex-start' }}>
-                <View style={styles.quadrant}>
-                    <TouchableOpacity style={styles.signupButton} onPress={() => { setModalVisible(true) }}>
 
+            <View style={styles.half}>
+                <View style={styles.quadrant}>
+                    <TouchableOpacity style={styles.signupButton} onPress={() => setModalVisible(true)}>
                         <Image source={require('../image/부모님.png')} style={styles.image} />
                         <Text style={styles.label}>학부모 로그인</Text>
                     </TouchableOpacity>
                 </View>
-                <View style={styles.quadrant}>
-                    <TouchableOpacity style={styles.signupButton} onPress={() => { setModalVisible(true) }}>
 
+                <View style={styles.quadrant}>
+                    <TouchableOpacity style={styles.signupButton} onPress={() => setModalVisible(true)}>
                         <Image source={require('../image/버스.png')} style={styles.image} />
                         <Text style={styles.label}>버스기사 로그인</Text>
                     </TouchableOpacity>
                 </View>
             </View>
+
             <Modal
                 animationType="slide"
                 transparent={true}
@@ -64,27 +85,35 @@ const SignUpScreen = ({ navigation }) => {
                 onRequestClose={() => setModalVisible(!modalVisible)}
             >
                 <View style={styles.centeredView}>
-
                     <TextInput
                         style={styles.input}
-                        onChangeText={text => setInputName(text)}
-                        value={inputName}
+                        onChangeText={setInputEmail}
+                        value={inputEmail}
                         placeholder="이메일"
                         placeholderTextColor="#C7C7CD"
                     />
                     <TextInput
                         style={styles.input}
-                        onChangeText={text => setInputClass(text)}
-                        value={inputClass}
+                        onChangeText={setInputPassword}
+                        value={inputPassword}
                         placeholder="비밀번호"
                         placeholderTextColor="#C7C7CD"
                     />
-                    <Button mode="contained">
-                        로그인
-                    </Button>
-                    <Button mode="contained" onPress={() => navigation.navigate('EmailSignUp')}>
-                        회원가입
-                    </Button>
+                    <TextInput
+                        style={styles.input}
+                        onChangeText={setInputName}
+                        value={inputName}
+                        placeholder="이름"
+                        placeholderTextColor="#C7C7CD"
+                    />
+                    <TextInput
+                        style={styles.input}
+                        onChangeText={setInputClass}
+                        value={inputClass}
+                        placeholder="반 이름"
+                        placeholderTextColor="#C7C7CD"
+                    />
+                    <Button onPress={handleSignUp}>회원가입</Button>
                 </View>
             </Modal>
         </SafeAreaView>

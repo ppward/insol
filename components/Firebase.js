@@ -1,11 +1,9 @@
 // Firebase.js
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { initializeApp } from 'firebase/app';
-import { getAuth, initializeAuth, getReactNativePersistence } from 'firebase/auth';
-import { getDatabase } from 'firebase/database';
+import { getAuth } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
 
-
-
+// Firebase configuration
 const firebaseConfig = {
     apiKey: "AIzaSyA5zILBB4bXwuczgihWqHx28pZvAXpwUmI",
     authDomain: "insol-301b9.firebaseapp.com",
@@ -17,12 +15,7 @@ const firebaseConfig = {
     databaseURL: "https://insol-301b9.firebaseio.com"
 };
 const app = initializeApp(firebaseConfig);
-const database = getDatabase(app);
-// Analytics가 지원되는 경우에만 초기화
-initializeAuth(app, {
-    persistence: getReactNativePersistence(AsyncStorage)
-});
-
 const auth = getAuth(app);
+const firestore = getFirestore(app);
 
-export { auth, database };
+export { app, auth, firestore };
