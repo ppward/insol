@@ -9,14 +9,14 @@ export default function Screen() {
   return (
     <NavigationContainer>
       <Stack.Navigator>
-      <Stack.Screen
-          name="SignUp"
-          component={SignUpScreen}
-          options={{headerShown: false}}
-        />
         <Stack.Screen
           name="Intro"
           component={Intro}
+          options={{headerShown: false}}
+        />
+        <Stack.Screen
+          name="SignUp"
+          component={SignUpScreen}
           options={{headerShown: false}}
         />
       </Stack.Navigator>
