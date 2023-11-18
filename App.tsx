@@ -2,10 +2,10 @@ import * as React from 'react';
 import {View, Text, Image, StyleSheet, ImageBackground} from 'react-native';
 import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
-import Screen from './navigator/Screen';
+import StackNav from './navigator/StackNav';
 
 export default function App() {
-  return <Screen />;
+  return <StackNav />;
 }
 const styles = StyleSheet.create({
   container: {

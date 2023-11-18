@@ -4,17 +4,13 @@ import {
   Text,
   Image,
   StyleSheet,
-  ImageBackground,
   TouchableOpacity,
-  Modal,
   Dimensions,
   ScrollView,
   TouchableWithoutFeedback,
 } from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import {Modalize} from 'react-native-modalize';
-import {Button, TextInput, Provider as PaperProvider} from 'react-native-paper';
-import {transparent} from 'react-native-paper/lib/typescript/styles/themes/v2/colors';
 
 const device_Height = Dimensions.get('window').height;
 const device_Width = Dimensions.get('window').width;

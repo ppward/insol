@@ -10,12 +10,14 @@ import {
   SafeAreaView,
   Alert,
   Dimensions,
+  Keyboard,
 } from 'react-native';
 import {Button} from 'react-native-paper';
 import {auth} from '../components/Firebase'; // Make sure to import the auth instance
 import {createUserWithEmailAndPassword} from 'firebase/auth';
 import {firestore} from '../components/Firebase'; // Make sure to import the firestore instance
 import {doc, setDoc} from 'firebase/firestore';
+import {TouchableWithoutFeedback} from 'react-native-gesture-handler';
 
 const SignUpScreen = ({navigation}) => {
   const [modalVisible, setModalVisible] = useState(false);
@@ -98,43 +100,48 @@ const SignUpScreen = ({navigation}) => {
         </View>
       </View>
 
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(!modalVisible)}>
-        <View style={styles.centeredView}>
-          <TextInput
-            style={styles.input}
-            onChangeText={setInputEmail}
-            value={inputEmail}
-            placeholder="이메일"
-            placeholderTextColor="#C7C7CD"
-          />
-          <TextInput
-            style={styles.input}
-            onChangeText={setInputPassword}
-            value={inputPassword}
-            placeholder="비밀번호"
-            placeholderTextColor="#C7C7CD"
-          />
-          <TextInput
-            style={styles.input}
-            onChangeText={setInputName}
-            value={inputName}
-            placeholder="이름"
-            placeholderTextColor="#C7C7CD"
-          />
-          <TextInput
-            style={styles.input}
-            onChangeText={setInputClass}
-            value={inputClass}
-            placeholder="반 이름"
-            placeholderTextColor="#C7C7CD"
-          />
-          <Button onPress={handleSignUp}>회원가입</Button>
-        </View>
-      </Modal>
+      <TouchableWithoutFeedback
+        onPress={() => {
+          setModalVisible(false);
+        }}>
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={modalVisible}
+          onRequestClose={() => setModalVisible(!modalVisible)}>
+          <View style={styles.centeredView}>
+            <TextInput
+              style={styles.input}
+              onChangeText={setInputEmail}
+              value={inputEmail}
+              placeholder="이메일"
+              placeholderTextColor="#C7C7CD"
+            />
+            <TextInput
+              style={styles.input}
+              onChangeText={setInputPassword}
+              value={inputPassword}
+              placeholder="비밀번호"
+              placeholderTextColor="#C7C7CD"
+            />
+            <TextInput
+              style={styles.input}
+              onChangeText={setInputName}
+              value={inputName}
+              placeholder="이름"
+              placeholderTextColor="#C7C7CD"
+            />
+            <TextInput
+              style={styles.input}
+              onChangeText={setInputClass}
+              value={inputClass}
+              placeholder="반 이름"
+              placeholderTextColor="#C7C7CD"
+            />
+            <Button onPress={handleSignUp}>회원가입</Button>
+          </View>
+        </Modal>
+      </TouchableWithoutFeedback>
     </SafeAreaView>
   );
 };
@@ -176,6 +183,8 @@ const styles = StyleSheet.create({
   },
   centeredView: {
     flex: 1,
+    width: '320',
+    height: '80%',
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 22,

@@ -5,7 +5,7 @@ import Intro from '../components/Intro';
 import SignUpScreen from '../screen/SignUpScreen';
 const Stack = createStackNavigator();
 
-export default function Screen() {
+export default function StackNav() {
   return (
     <NavigationContainer>
       <Stack.Navigator>
