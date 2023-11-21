@@ -1,4 +1,4 @@
-import React, {useRef} from 'react';
+import React, {useRef, useState, useCallback} from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   Dimensions,
   ScrollView,
   TouchableWithoutFeedback,
+  TextInput,
 } from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import {Modalize} from 'react-native-modalize';
@@ -18,6 +19,9 @@ const device_Width = Dimensions.get('window').width;
 export default function Intro() {
   const navigation = useNavigation();
   const modalizeRef = useRef(null);
+  const [modalChange, setModalChange] = useState(false);
+  const [email, setEmaill] = useState('');
+  const [password, setPassword] = useState('');
 
   const onOpen = () => {
     if (modalizeRef.current) {
@@ -34,12 +38,16 @@ export default function Intro() {
         }}>
         <TouchableOpacity
           style={{marginTop: 150}}
-          onPress={() => navigation.navigate('login')}>
+          onPress={() => {
+            setModalChange(true);
+          }}>
           <View style={styles.modalButton}>
             <Text style={styles.modalButtonText}>로그인</Text>
           </View>
         </TouchableOpacity>
-        <TouchableOpacity style={{marginTop: 30}}>
+        <TouchableOpacity
+          style={{marginTop: 30}}
+          onPress={() => navigation.navigate('SignUp')}>
           <View style={styles.modalButton}>
             <Text style={styles.modalButtonText}>회원가입</Text>
           </View>
@@ -47,7 +55,55 @@ export default function Intro() {
       </ScrollView>
     );
   }
+  const ModalLogin = useCallback(() => {
+    return (
+      <ScrollView
+        contentContainerStyle={{
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}>
+        <View
+          style={{
+            ...styles.modalInput,
+            marginTop: 100,
+          }}>
+          <TextInput
+            placeholder="email을 입력하세요."
+            value={email}
+            onChangeText={setEmaill}
+          />
+        </View>
+        <View style={{...styles.modalInput, marginTop: 20}}>
+          <TextInput
+            placeholder="password를 입력하세요."
+            value={password}
+            onChangeText={setPassword}
+          />
+        </View>
 
+        <TouchableOpacity
+          style={{marginTop: 40}}
+          onPress={() => navigation.navigate('Tab')}>
+          <View
+            style={{
+              width: 185,
+              height: 55,
+              borderRadius: 15,
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: '#8C7FE1',
+              borderWidth: 1.5,
+              borderColor: '#fff',
+            }}>
+            <Text style={{fontSize: 25, fontWeight: 'bold'}}>로그인</Text>
+          </View>
+        </TouchableOpacity>
+      </ScrollView>
+    );
+  }, [email, password]);
+  const renderModalContent = () => {
+    return modalChange ? <ModalLogin /> : <ModalContent />;
+  };
   return (
     <TouchableWithoutFeedback onPress={onOpen}>
       <View style={styles.container}>
@@ -63,8 +119,9 @@ export default function Intro() {
         <Modalize
           ref={modalizeRef}
           snapPoint={device_Height / 2}
-          modalStyle={{backgroundColor: 'rgba(255, 255, 255, 0.5)'}}>
-          <ModalContent />
+          modalStyle={{backgroundColor: 'rgba(255, 255, 255, 0.5)'}}
+          onClose={() => setModalChange(false)}>
+          {renderModalContent()}
         </Modalize>
       </View>
     </TouchableWithoutFeedback>
@@ -95,5 +152,13 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 30,
     color: '#fff',
+  },
+  modalInput: {
+    width: 260,
+    height: 50,
+    backgroundColor: '#fff',
+    borderRadius: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
