@@ -1,4 +1,5 @@
-import React, {useRef} from 'react';
+// Import statements...
+import React, { useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -7,21 +8,66 @@ import {
   TouchableOpacity,
   Dimensions,
   ScrollView,
+  TextInput,
+  Alert,
   TouchableWithoutFeedback,
 } from 'react-native';
-import {useNavigation} from '@react-navigation/native';
-import {Modalize} from 'react-native-modalize';
+import { useNavigation } from '@react-navigation/native';
+import { Modalize } from 'react-native-modalize';
+import { auth } from '../components/Firebase'; // Ensure this path is correct
+import { signInWithEmailAndPassword } from 'firebase/auth';
 
 const device_Height = Dimensions.get('window').height;
 const device_Width = Dimensions.get('window').width;
 
+// Separate component for the login modal content
+const LoginModalContent = ({ onLogin, onEmailChange, onPasswordChange, email, password }) => {
+  return (
+    <View style={styles.modalContentContainer}>
+      <TextInput
+        style={styles.input}
+        onChangeText={onEmailChange}
+        value={email}
+        placeholder="이메일"
+        keyboardType="email-address"
+        autoCapitalize="none"
+      />
+      <TextInput
+        style={styles.input}
+        onChangeText={onPasswordChange}
+        value={password}
+        placeholder="비밀번호"
+        secureTextEntry
+      />
+      <TouchableOpacity
+        style={styles.modalButton}
+        onPress={onLogin}>
+        <Text style={styles.modalButtonText}>로그인</Text>
+      </TouchableOpacity>
+    </View>
+  );
+};
+
 export default function Intro() {
   const navigation = useNavigation();
   const modalizeRef = useRef(null);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLoginVisible, setIsLoginVisible] = useState(false);
 
   const onOpen = () => {
-    if (modalizeRef.current) {
-      modalizeRef.current.open();
+    setIsLoginVisible(false);
+    modalizeRef.current?.open();
+  };
+
+  const handleLogin = async () => {
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      // console.log('Logged in with:', userCredential.user);
+      modalizeRef.current?.close();
+      navigation.navigate('Parents'); // Replace with your map screen route name
+    } catch (error) {
+      Alert.alert('Login failed', error.message);
     }
   };
 
@@ -33,13 +79,15 @@ export default function Intro() {
           justifyContent: 'center',
         }}>
         <TouchableOpacity
-          style={{marginTop: 150}}
-          onPress={() => navigation.navigate('login')}>
+          style={{marginTop: 100}}
+          onPress={() => setIsLoginVisible(true)}>
           <View style={styles.modalButton}>
             <Text style={styles.modalButtonText}>로그인</Text>
           </View>
         </TouchableOpacity>
-        <TouchableOpacity style={{marginTop: 30}}>
+        <TouchableOpacity
+          style={{marginTop: 30}}
+          onPress={() => navigation.navigate('SignUp')}>
           <View style={styles.modalButton}>
             <Text style={styles.modalButtonText}>회원가입</Text>
           </View>
@@ -49,25 +97,37 @@ export default function Intro() {
   }
 
   return (
-    <TouchableWithoutFeedback onPress={onOpen}>
-      <View style={styles.container}>
-        <View style={{alignItems: 'center'}}>
+    <View style={styles.container}>
+      <TouchableWithoutFeedback onPress={onOpen}>
+        <View style={{ alignItems: 'center' }}>
           <Text style={styles.header}>인솔</Text>
-          <Text style={{top: 50, fontSize: 28}}>[ insol ]</Text>
+          <Text style={{ top: 50, fontSize: 28 }}>[ insol ]</Text>
           <Image
             source={require('../assets/7605994.jpg')}
-            style={{top: '20%', width: device_Width, height: device_Width}}
+            style={{ top: '20%', width: device_Width, height: device_Width }}
           />
         </View>
+      </TouchableWithoutFeedback>
 
-        <Modalize
-          ref={modalizeRef}
-          snapPoint={device_Height / 2}
-          modalStyle={{backgroundColor: 'rgba(255, 255, 255, 0.5)'}}>
+      <Modalize
+        ref={modalizeRef}
+        snapPoint={device_Height / 2}
+        modalStyle={styles.modalStyle}
+        onClosed={() => setIsLoginVisible(false)}
+      >
+        {isLoginVisible ? (
+          <LoginModalContent
+            onLogin={handleLogin}
+            onEmailChange={setEmail}
+            onPasswordChange={setPassword}
+            email={email}
+            password={password}
+          />
+        ) : (
           <ModalContent />
-        </Modalize>
-      </View>
-    </TouchableWithoutFeedback>
+        )}
+      </Modalize>
+    </View>
   );
 }
 
@@ -90,10 +150,28 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     alignItems: 'center',
     justifyContent: 'center',
+    marginTop: 20,
   },
   modalButtonText: {
     fontWeight: 'bold',
     fontSize: 30,
     color: '#fff',
+  },
+  modalContentContainer: {
+    padding: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  input: {
+    width: '80%',
+    height: 50,
+    borderWidth: 1,
+    borderColor: 'gray',
+    borderRadius: 5,
+    padding: 10,
+    marginVertical: 10,
+  },
+  modalStyle: {
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
   },
 });

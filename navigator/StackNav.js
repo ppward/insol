@@ -1,9 +1,10 @@
 import 'react-native-gesture-handler';
-import {NavigationContainer} from '@react-navigation/native';
-import {createStackNavigator} from '@react-navigation/stack';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
 import Intro from '../components/Intro';
 import SignUpScreen from '../screen/SignUpScreen';
 import TabNav from './TabNav';
+import Parents from '../screen/Parents';
 const Stack = createStackNavigator();
 
 export default function StackNav() {
@@ -13,12 +14,17 @@ export default function StackNav() {
         <Stack.Screen
           name="Intro"
           component={Intro}
-          options={{headerShown: false}}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="Parents"
+          component={Parents}
+          options={{ headerShown: false }}
         />
         <Stack.Screen
           name="SignUp"
           component={SignUpScreen}
-          options={{headerShown: false}}
+          options={{ headerShown: false }}
         />
         <Stack.Screen
           name="Tab"
