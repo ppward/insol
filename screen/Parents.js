@@ -4,7 +4,6 @@ import MapView from 'react-native-maps';
 
 export default function Map() {
   const onButtonPress = () => {
-    // Handle the button press
     console.log('Button pressed');
   };
   return (
