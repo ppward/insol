@@ -27,7 +27,7 @@ const SignUpScreen = ({navigation}) => {
   const closeModal = () => {
     setModalVisible(false);
   };
-
+  
   const handleSignUp = async () => {
     // 입력 값에 대한 유효성 검사
     if (!inputEmail.includes('@')) {
@@ -58,6 +58,7 @@ const SignUpScreen = ({navigation}) => {
         email: inputEmail,
         class: inputClass,
         name: inputName,
+        job: inputJob,
       });
       Alert.alert('Success', 'User registered successfully');
       navigation.navigate('Intro');
