@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import {
   StyleSheet,
   View,
@@ -12,12 +12,12 @@ import {
   Dimensions,
   TouchableWithoutFeedback,
 } from 'react-native';
-import { auth } from '../components/Firebase'; // Make sure to import the auth instance
-import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { firestore } from '../components/Firebase'; // Make sure to import the firestore instance
-import { doc, setDoc } from 'firebase/firestore';
+import {auth} from './Firebase'; // Make sure to import the auth instance
+import {createUserWithEmailAndPassword} from 'firebase/auth';
+import {firestore} from './Firebase'; // Make sure to import the firestore instance
+import {doc, setDoc} from 'firebase/firestore';
 
-const SignUpScreen = ({ navigation }) => {
+const SignUpScreen = ({navigation}) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [inputEmail, setInputEmail] = useState('');
   const [inputPassword, setInputPassword] = useState('');
@@ -68,7 +68,6 @@ const SignUpScreen = ({ navigation }) => {
     }
   };
 
-
   const handleLoginPress = job => {
     setInputJob(job); // 직업 상태 설정
     setModalVisible(true); // 모달 열기
@@ -76,7 +75,7 @@ const SignUpScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={{ ...styles.half, alignItems: 'flex-end' }}>
+      <View style={{...styles.half, alignItems: 'flex-end'}}>
         <View style={styles.quadrant}>
           <TouchableOpacity
             style={styles.signupButton}
@@ -104,7 +103,7 @@ const SignUpScreen = ({ navigation }) => {
         </View>
       </View>
 
-      <View style={{ ...styles.half, alignItems: 'flex-start' }}>
+      <View style={{...styles.half, alignItems: 'flex-start'}}>
         <View style={styles.quadrant}>
           <TouchableOpacity
             style={styles.signupButton}

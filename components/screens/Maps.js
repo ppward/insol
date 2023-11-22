@@ -20,7 +20,7 @@ export default function Maps() {
       <View style={styles.header}>
         <View style={styles.profileContainer}>
           <Image
-            source={require('../image/부모님.png')}
+            source={require('../../image/부모님.png')}
             style={styles.profilePic}
           />
           <Text style={styles.headerText}>부모님</Text>

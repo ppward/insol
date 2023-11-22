@@ -72,7 +72,7 @@ export default function Intro() {
       );
       // console.log('Logged in with:', userCredential.user);
       modalizeRef.current?.close();
-      navigation.navigate('Parents'); // Replace with your map screen route name
+      navigation.navigate('Tab'); // Replace with your map screen route name
     } catch (error) {
       Alert.alert('Login failed', error.message);
     }
