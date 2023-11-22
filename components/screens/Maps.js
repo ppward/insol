@@ -1,11 +1,20 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image, SafeAreaView, TouchableOpacity } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  SafeAreaView,
+  TouchableOpacity,
+} from 'react-native';
 import MapView from 'react-native-maps';
 
-export default function Map() {
+export default function Maps() {
   const onButtonPress = () => {
+    // Handle the button press
     console.log('Button pressed');
   };
+  //
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>

@@ -10,7 +10,6 @@ import {
   TextInput,
   Alert,
   TouchableWithoutFeedback,
-  TextInput,
 } from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import {Modalize} from 'react-native-modalize';
