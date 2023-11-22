@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import {
   StyleSheet,
   View,
@@ -12,12 +12,12 @@ import {
   Dimensions,
   TouchableWithoutFeedback,
 } from 'react-native';
-import {auth} from '../components/Firebase'; // Make sure to import the auth instance
-import {createUserWithEmailAndPassword} from 'firebase/auth';
-import {firestore} from '../components/Firebase'; // Make sure to import the firestore instance
-import {doc, setDoc} from 'firebase/firestore';
+import { auth } from '../components/Firebase'; // Make sure to import the auth instance
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { firestore } from '../components/Firebase'; // Make sure to import the firestore instance
+import { doc, setDoc } from 'firebase/firestore';
 
-const SignUpScreen = ({navigation}) => {
+const SignUpScreen = ({ navigation }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [inputEmail, setInputEmail] = useState('');
   const [inputPassword, setInputPassword] = useState('');
@@ -29,6 +29,24 @@ const SignUpScreen = ({navigation}) => {
   };
 
   const handleSignUp = async () => {
+    // 입력 값에 대한 유효성 검사
+    if (!inputEmail.includes('@')) {
+      Alert.alert('Error', 'Invalid email format');
+      return;
+    }
+    if (inputPassword.length < 6) {
+      Alert.alert('Error', 'Password must be at least 6 characters');
+      return;
+    }
+    if (inputName.trim().length === 0) {
+      Alert.alert('Error', 'Name is required');
+      return;
+    }
+    if (inputClass.trim().length === 0) {
+      Alert.alert('Error', 'Class name is required');
+      return;
+    }
+
     try {
       const userCredential = await createUserWithEmailAndPassword(
         auth,
@@ -42,15 +60,14 @@ const SignUpScreen = ({navigation}) => {
         name: inputName,
       });
       Alert.alert('Success', 'User registered successfully');
-
-      // 회원가입 완료 후 Intro 페이지로 이동
-      navigation.navigate('Intro'); // 'Intro'는 여러분의 네비게이터에 정의된 페이지 이름으로 바꿔주세요.
+      navigation.navigate('Intro');
     } catch (error) {
       const errorCode = error.code;
       const errorMessage = error.message;
       Alert.alert('Error', errorCode + ': ' + errorMessage);
     }
   };
+
 
   const handleLoginPress = job => {
     setInputJob(job); // 직업 상태 설정
@@ -59,7 +76,7 @@ const SignUpScreen = ({navigation}) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={{...styles.half, alignItems: 'flex-end'}}>
+      <View style={{ ...styles.half, alignItems: 'flex-end' }}>
         <View style={styles.quadrant}>
           <TouchableOpacity
             style={styles.signupButton}
@@ -87,7 +104,7 @@ const SignUpScreen = ({navigation}) => {
         </View>
       </View>
 
-      <View style={{...styles.half, alignItems: 'flex-start'}}>
+      <View style={{ ...styles.half, alignItems: 'flex-start' }}>
         <View style={styles.quadrant}>
           <TouchableOpacity
             style={styles.signupButton}
@@ -124,6 +141,8 @@ const SignUpScreen = ({navigation}) => {
                 value={inputEmail}
                 placeholder="이메일"
                 placeholderTextColor="#C7C7CD"
+                keyboardType="default"
+                autoCapitalize="none"
               />
               <TextInput
                 style={styles.input}
@@ -131,6 +150,9 @@ const SignUpScreen = ({navigation}) => {
                 value={inputPassword}
                 placeholder="비밀번호"
                 placeholderTextColor="#C7C7CD"
+                secureTextEntry={true} // 비밀번호 가리기 활성화
+                keyboardType="default" // 기본 키보드 사용
+                autoCapitalize="none" // 자동 대문자 변환 비활성화
               />
               <TextInput
                 style={styles.input}
@@ -138,6 +160,8 @@ const SignUpScreen = ({navigation}) => {
                 value={inputName}
                 placeholder="이름"
                 placeholderTextColor="#C7C7CD"
+                keyboardType="default"
+                autoCapitalize="none"
               />
               <TextInput
                 style={styles.input}
@@ -145,6 +169,8 @@ const SignUpScreen = ({navigation}) => {
                 value={inputClass}
                 placeholder="반 이름"
                 placeholderTextColor="#C7C7CD"
+                keyboardType="default"
+                autoCapitalize="none"
               />
               <TouchableOpacity onPress={handleSignUp}>
                 <View
@@ -180,13 +206,13 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)', // 반투명 배경
   },
   modalView: {
-    width: 320, // 모달창의 너비를 300으로 설정
-    height: 400, // 모달창의 높이를 400으로 설정
+    width: 320,
+    height: 400,
     backgroundColor: 'rgba(255,255,255,0)',
     borderRadius: 20,
     padding: 35,
     alignItems: 'center',
-    justifyContent: 'center', // 내용을 중앙에 정렬
+    justifyContent: 'center',
   },
   half: {
     flex: 1,
