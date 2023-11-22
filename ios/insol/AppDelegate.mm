@@ -6,10 +6,11 @@
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
+  [GMSServices provideAPIKey:@"AIzaSyBXSxMFjzikCYRuUJ_7DvFxAvoib0INVq8"];
   self.moduleName = @"insol";
   // You can add your custom initial props in the dictionary below.
   // They will be passed down to the ViewController used by React Native.
-  [GMSServices provideAPIKey:@"AIzaSyBXSxMFjzikCYRuUJ_7DvFxAvoib0INVq8"];
+  
   self.initialProps = @{};
   [FIRApp configure];
   return [super application:application didFinishLaunchingWithOptions:launchOptions];
