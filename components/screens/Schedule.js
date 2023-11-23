@@ -1,5 +1,16 @@
-import {View, Text, SafeAreaView, StyleSheet} from 'react-native';
+import {
+  View,
+  Text,
+  SafeAreaView,
+  StyleSheet,
+  Modal,
+  Dimensions,
+} from 'react-native';
 import {Calendar} from 'react-native-calendars';
+import MapView, {PROVIDER_GOOGLE} from 'react-native-maps';
+
+const itWidth = Dimensions.get('window').width;
+
 export default function Schedule() {
   return (
     <SafeAreaView style={styles.container}>
@@ -7,7 +18,7 @@ export default function Schedule() {
         <Text style={styles.headerText}>일정 </Text>
       </View>
       <View style={styles.calendarContainer}>
-        <Calendar />
+        <Calendar style={{padding: 0, margin: 0, borderRadius: 15}} />
       </View>
     </SafeAreaView>
   );
@@ -29,5 +40,12 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 26,
   },
-  calendarContainer: {width: 330, height: 265, marginTop: 30, borderRadius: 15},
+  calendarContainer: {
+    width: itWidth * 0.8,
+    height: 240,
+    marginTop: 30,
+    borderRadius: 15,
+    overflow: 'hidden',
+    justifyContent: 'center',
+  },
 });
