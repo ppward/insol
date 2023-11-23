@@ -39,8 +39,11 @@ export default function Maps() {
   const mapRef = useRef(null);
 
   useEffect(() => {
-    (async () => {
-      if (Platform.OS === 'android') {
+    // 위치 정보 가져오기
+    const requestLocationPermission = async () => {
+      if (Platform.OS === 'ios') {
+        // iOS 권한 요청 (필요한 경우)
+      } else if (Platform.OS === 'android') {
         const response = await PermissionsAndroid.request(
           PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
         );
@@ -65,8 +68,11 @@ export default function Maps() {
         },
         {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000},
       );
-    })();
+    };
 
+    requestLocationPermission();
+
+    // Firebase 데이터 가져오기
     const fetchUserJob = async () => {
       try {
         const uid = auth.currentUser.uid;
@@ -87,6 +93,11 @@ export default function Maps() {
     fetchUserJob();
   }, []);
 
+  useEffect(() => {
+    console.log('Current Position: ', currentPosition);
+    console.log('Job Info: ', jobInfo);
+  }, [currentPosition, jobInfo]);
+
   if (!jobInfo || !currentPosition) {
     return (
       <View style={styles.container}>
@@ -94,7 +105,7 @@ export default function Maps() {
       </View>
     );
   }
-  //임시 메뉴버튼
+
   const onHeaderButtonPress = () => {
     console.log('Header Button Pressed');
   };
@@ -114,9 +125,9 @@ export default function Maps() {
       </View>
       <View style={styles.mapContainer}>
         <MapView
-          provider={PROVIDER_GOOGLE}
           ref={mapRef}
           style={styles.map}
+          provider={PROVIDER_GOOGLE} // Use Google Maps on iOS
           initialRegion={currentPosition}
           showsUserLocation={true}
         />
@@ -177,10 +188,12 @@ const styles = StyleSheet.create({
   },
   headerText: {
     fontSize: 18,
+    fontWeight: 'bold',
+    marginLeft: 25,
   },
   mapContainer: {
     width: '80%',
-    height: '77%',
+    height: '70%',
     alignSelf: 'center',
     borderRadius: 15,
     overflow: 'hidden',
