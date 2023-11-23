@@ -9,7 +9,7 @@ import {
   PermissionsAndroid,
   Platform,
 } from 'react-native';
-import MapView from 'react-native-maps';
+import MapView, { PROVIDER_GOOGLE } from 'react-native-maps';
 import Geolocation from '@react-native-community/geolocation';
 import { auth, firestore } from '../Firebase';
 import { doc, getDoc } from 'firebase/firestore';
@@ -39,8 +39,11 @@ export default function Maps() {
   const mapRef = useRef(null);
 
   useEffect(() => {
-    (async () => {
-      if (Platform.OS === 'android') {
+    // 위치 정보 가져오기
+    const requestLocationPermission = async () => {
+      if (Platform.OS === 'ios') {
+        // iOS 권한 요청 (필요한 경우)
+      } else if (Platform.OS === 'android') {
         const response = await PermissionsAndroid.request(
           PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
         );
@@ -65,8 +68,11 @@ export default function Maps() {
         },
         { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 },
       );
-    })();
+    };
 
+    requestLocationPermission();
+
+    // Firebase 데이터 가져오기
     const fetchUserJob = async () => {
       try {
         const uid = auth.currentUser.uid;
@@ -87,6 +93,7 @@ export default function Maps() {
     fetchUserJob();
   }, []);
 
+
   if (!jobInfo || !currentPosition) {
     return (
       <View style={styles.container}>
@@ -94,11 +101,10 @@ export default function Maps() {
       </View>
     );
   }
-  //임시 메뉴버튼
+
   const onHeaderButtonPress = () => {
     console.log('Header Button Pressed');
   };
-
 
   return (
     <SafeAreaView style={styles.container}>
@@ -115,6 +121,7 @@ export default function Maps() {
         <MapView
           ref={mapRef}
           style={styles.map}
+          provider={PROVIDER_GOOGLE} // Use Google Maps on iOS
           initialRegion={currentPosition}
           showsUserLocation={true}
         />
