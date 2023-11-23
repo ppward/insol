@@ -20,6 +20,37 @@ export default function Schedule() {
       <View style={styles.calendarContainer}>
         <Calendar style={{padding: 0, margin: 0, borderRadius: 15}} />
       </View>
+      <View
+        style={{
+          margin: 15,
+          width: itWidth * 0.8,
+          height: 80,
+          borderRadius: 15,
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: 'lightgrey',
+        }}>
+        <Text>일정 리스트</Text>
+      </View>
+      <View
+        style={{
+          width: itWidth * 0.8,
+          height: 80,
+          borderRadius: 15,
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: 'lightgrey',
+        }}>
+        <MapView
+          style={{flex: 1}}
+          initialRegion={{
+            latitude: 37.3,
+            longitude: 127.07,
+            latitudeDelta: 0.9,
+            longitudeDelta: 0.4,
+          }}
+        />
+      </View>
     </SafeAreaView>
   );
 }
@@ -42,7 +73,7 @@ const styles = StyleSheet.create({
   },
   calendarContainer: {
     width: itWidth * 0.8,
-    height: 240,
+    height: 290,
     marginTop: 30,
     borderRadius: 15,
     overflow: 'hidden',
