@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import {
   StyleSheet,
   View,
@@ -12,24 +12,21 @@ import {
   Dimensions,
   TouchableWithoutFeedback,
 } from 'react-native';
-import {auth} from './Firebase'; // Make sure to import the auth instance
-import {createUserWithEmailAndPassword} from 'firebase/auth';
-import {firestore} from './Firebase'; // Make sure to import the firestore instance
-import {doc, setDoc} from 'firebase/firestore';
+import { auth, firestore } from './Firebase'; // Firebase 설정이 올바르게 되어있어야 합니다.
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { query, collection, where, getDocs ,setDoc, doc } from 'firebase/firestore';
 
-const SignUpScreen = ({navigation}) => {
+const SignUpScreen = ({ navigation }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [inputEmail, setInputEmail] = useState('');
   const [inputPassword, setInputPassword] = useState('');
   const [inputName, setInputName] = useState('');
   const [inputClass, setInputClass] = useState('');
   const [inputJob, setInputJob] = useState('');
-  const closeModal = () => {
-    setModalVisible(false);
-  };
-  
+  const [inputStudentEmail, setInputStudentEmail] = useState('');
+
   const handleSignUp = async () => {
-    // 입력 값에 대한 유효성 검사
+    let studentClass = '';
     if (!inputEmail.includes('@')) {
       Alert.alert('Error', 'Invalid email format');
       return;
@@ -42,37 +39,127 @@ const SignUpScreen = ({navigation}) => {
       Alert.alert('Error', 'Name is required');
       return;
     }
-    if (inputClass.trim().length === 0) {
+    if (inputJob !== '학부모' && inputClass.trim().length === 0) {
       Alert.alert('Error', 'Class name is required');
       return;
     }
 
+    if (inputJob === '학부모') {
+      // 학부모 회원가입 시 학생 이메일 검증 및 부모 정보 업데이트
+      if (!inputStudentEmail.includes('@')) {
+        Alert.alert('Error', 'Invalid student email format');
+        return;
+      }
+  
+      try {
+        const studentsQuery = query(
+          collection(firestore, 'users'),
+          where('email', '==', inputStudentEmail),
+          where('job', '==', '학생'),
+        );
+        const querySnapshot = await getDocs(studentsQuery);
+  
+        if (querySnapshot.empty) {
+          Alert.alert('Error', 'No student account found with the provided email');
+          return;
+        } else {
+          const studentDoc = querySnapshot.docs[0];
+          const studentData = studentDoc.data();
+  
+          if (studentData.parent) {
+            Alert.alert('Error', 'A parent is already registered for this student');
+            return;
+          } else {
+            studentClass = studentData.class; // 학생의 class 정보 저장
+            await setDoc(studentDoc.ref, { ...studentData, parent: inputEmail });
+          }
+        }
+      } catch (error) {
+        Alert.alert('Error', 'Failed to verify student email');
+        return;
+      }
+    }
+  
+    // 계정 생성 로직
     try {
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         inputEmail,
         inputPassword,
       );
-      const user = userCredential.user;
-      await setDoc(doc(firestore, 'users', user.uid), {
+      await setDoc(doc(firestore, 'users', userCredential.user.uid), {
         email: inputEmail,
-        class: inputClass,
+        class: inputJob === '학부모' ? studentClass : inputClass, // 학부모는 학생의 class 사용
         name: inputName,
         job: inputJob,
+        studentEmail: inputJob === '학부모' ? inputStudentEmail : null,
       });
       Alert.alert('Success', 'User registered successfully');
       navigation.navigate('Intro');
     } catch (error) {
-      const errorCode = error.code;
-      const errorMessage = error.message;
-      Alert.alert('Error', errorCode + ': ' + errorMessage);
+      Alert.alert('Error', error.message);
     }
   };
 
   const handleLoginPress = job => {
-    setInputJob(job); // 직업 상태 설정
-    setModalVisible(true); // 모달 열기
+    setInputJob(job);
+    setModalVisible(true);
   };
+
+  const renderModalContent = () => (
+    <View style={styles.modalView}>
+      <TextInput
+        style={styles.input}
+        onChangeText={setInputEmail}
+        value={inputEmail}
+        placeholder="이메일"
+        placeholderTextColor="#C7C7CD"
+        keyboardType="email-address"
+        autoCapitalize="none"
+      />
+      <TextInput
+        style={styles.input}
+        onChangeText={setInputPassword}
+        value={inputPassword}
+        placeholder="비밀번호"
+        placeholderTextColor="#C7C7CD"
+        secureTextEntry
+        autoCapitalize="none"
+      />
+      <TextInput
+        style={styles.input}
+        onChangeText={setInputName}
+        value={inputName}
+        placeholder="이름"
+        placeholderTextColor="#C7C7CD"
+        autoCapitalize="none"
+      />
+      {inputJob !== '학부모' && (
+      <TextInput
+        style={styles.input}
+        onChangeText={setInputClass}
+        value={inputClass}
+        placeholder="반 이름"
+        placeholderTextColor="#C7C7CD"
+        autoCapitalize="none"
+      />
+    )}
+      {inputJob === '학부모' && (
+        <TextInput
+          style={styles.input}
+          onChangeText={setInputStudentEmail}
+          value={inputStudentEmail}
+          placeholder="학생 이메일"
+          placeholderTextColor="#C7C7CD"
+          keyboardType="email-address"
+          autoCapitalize="none"
+        />
+      )}
+      <TouchableOpacity style={styles.button} onPress={handleSignUp}>
+        <Text style={styles.buttonText}>회원가입</Text>
+      </TouchableOpacity>
+    </View>
+  );
 
   return (
     <SafeAreaView style={styles.container}>
@@ -134,58 +221,7 @@ const SignUpScreen = ({navigation}) => {
         onRequestClose={() => setModalVisible(!modalVisible)}>
         <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
           <View style={styles.modalOverlay}>
-            <View style={styles.modalView}>
-              <TextInput
-                style={styles.input}
-                onChangeText={setInputEmail}
-                value={inputEmail}
-                placeholder="이메일"
-                placeholderTextColor="#C7C7CD"
-                keyboardType="default"
-                autoCapitalize="none"
-              />
-              <TextInput
-                style={styles.input}
-                onChangeText={setInputPassword}
-                value={inputPassword}
-                placeholder="비밀번호"
-                placeholderTextColor="#C7C7CD"
-                secureTextEntry={true} // 비밀번호 가리기 활성화
-                keyboardType="default" // 기본 키보드 사용
-                autoCapitalize="none" // 자동 대문자 변환 비활성화
-              />
-              <TextInput
-                style={styles.input}
-                onChangeText={setInputName}
-                value={inputName}
-                placeholder="이름"
-                placeholderTextColor="#C7C7CD"
-                keyboardType="default"
-                autoCapitalize="none"
-              />
-              <TextInput
-                style={styles.input}
-                onChangeText={setInputClass}
-                value={inputClass}
-                placeholder="반 이름"
-                placeholderTextColor="#C7C7CD"
-                keyboardType="default"
-                autoCapitalize="none"
-              />
-              <TouchableOpacity onPress={handleSignUp}>
-                <View
-                  style={{
-                    width: 150,
-                    height: 30,
-                    borderRadius: 8,
-                    backgroundColor: '#fff',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}>
-                  <Text>회원가입</Text>
-                </View>
-              </TouchableOpacity>
-            </View>
+            {renderModalContent()}
           </View>
         </TouchableWithoutFeedback>
       </Modal>

@@ -129,7 +129,7 @@ export default function Maps() {
           style={styles.map}
           provider={PROVIDER_GOOGLE} // Use Google Maps on iOS
           initialRegion={currentPosition}
-          showsUserLocation={true}
+          showsUserLocation={false}
         />
         {currentPosition && (
           <TouchableOpacity
