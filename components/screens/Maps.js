@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useRef} from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -9,10 +9,11 @@ import {
   PermissionsAndroid,
   Platform,
 } from 'react-native';
-import MapView, {PROVIDER_GOOGLE} from 'react-native-maps';
+import MapView, { PROVIDER_GOOGLE } from 'react-native-maps';
 import Geolocation from '@react-native-community/geolocation';
-import {auth, firestore} from '../Firebase';
-import {doc, getDoc} from 'firebase/firestore';
+import { auth, firestore } from '../Firebase';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { BleManager } from 'react-native-ble-plx';
 
 const jobDetails = {
   선생님: {
@@ -37,66 +38,116 @@ export default function Maps() {
   const [jobInfo, setJobInfo] = useState(null);
   const [currentPosition, setCurrentPosition] = useState(null);
   const mapRef = useRef(null);
+  const bleManager = new BleManager();
 
   useEffect(() => {
-    // 위치 정보 가져오기
-    const requestLocationPermission = async () => {
-      if (Platform.OS === 'ios') {
-        // iOS 권한 요청 (필요한 경우)
-      } else if (Platform.OS === 'android') {
-        const response = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-        );
-        if (response !== PermissionsAndroid.RESULTS.GRANTED) {
-          console.error('Location permission denied');
-          return;
-        }
-      }
-
-      Geolocation.getCurrentPosition(
-        position => {
-          const {latitude, longitude} = position.coords;
-          setCurrentPosition({
-            latitude,
-            longitude,
-            latitudeDelta: 0.005,
-            longitudeDelta: 0.005,
-          });
-        },
-        error => {
-          console.error(error);
-        },
-        {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000},
-      );
-    };
-
     requestLocationPermission();
-
-    // Firebase 데이터 가져오기
-    const fetchUserJob = async () => {
-      try {
-        const uid = auth.currentUser.uid;
-        const userDocRef = doc(firestore, 'users', uid);
-        const userDocSnap = await getDoc(userDocRef);
-
-        if (userDocSnap.exists()) {
-          const job = userDocSnap.data().job;
-          setJobInfo(jobDetails[job]);
-        } else {
-          console.error('No such document!');
-        }
-      } catch (error) {
-        console.error("Error fetching user's job:", error);
-      }
-    };
-
     fetchUserJob();
+
+    const locationInterval = setInterval(updateLocation, 60000); // 1분마다 위치 업데이트
+
+    return () => clearInterval(locationInterval); // 컴포넌트 언마운트 시 인터벌 정리
   }, []);
 
-  useEffect(() => {
-    console.log('Current Position: ', currentPosition);
-    console.log('Job Info: ', jobInfo);
-  }, [currentPosition, jobInfo]);
+  const requestLocationPermission = async () => {
+    if (Platform.OS === 'ios') {
+      // iOS 권한 요청 (필요한 경우)
+    } else if (Platform.OS === 'android') {
+      const grantedLocation = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+      );
+
+      const grantedBluetooth = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT,
+      );
+
+      if (grantedLocation !== PermissionsAndroid.RESULTS.GRANTED ||
+          grantedBluetooth !== PermissionsAndroid.RESULTS.GRANTED) {
+        console.error('Location or Bluetooth permission denied');
+        return;
+      }
+    }
+    updateLocation();
+  };
+
+  const fetchUserJob = async () => {
+    try {
+      const uid = auth.currentUser.uid;
+      const userDocRef = doc(firestore, 'users', uid);
+      const userDocSnap = await getDoc(userDocRef);
+
+      if (userDocSnap.exists()) {
+        const job = userDocSnap.data().job;
+        setJobInfo(jobDetails[job]);
+      } else {
+        console.error('No such document!');
+      }
+    } catch (error) {
+      console.error("Error fetching user's job:", error);
+    }
+  };
+
+  const updateLocation = () => {
+    Geolocation.getCurrentPosition(
+      position => {
+        const { latitude, longitude } = position.coords;
+        setCurrentPosition({
+          latitude,
+          longitude,
+          latitudeDelta: 0.005,
+          longitudeDelta: 0.005,
+        });
+        updateUserLocationInFirebase(latitude, longitude);
+      },
+      error => {
+        console.error(error);
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 },
+    );
+  };
+
+  const updateUserLocationInFirebase = (latitude, longitude) => {
+    const uid = auth.currentUser.uid;
+    const userDocRef = doc(firestore, 'users', uid);
+
+    setDoc(userDocRef, { location: { latitude, longitude } }, { merge: true })
+      .then(() => {
+        console.log('User location updated in Firebase.');
+      })
+      .catch(error => {
+        console.error('Error updating user location:', error);
+      });
+  };
+
+  const startBluetoothScan = () => {
+    bleManager.startDeviceScan(null, null, (error, device) => {
+      if (error) {
+        console.log(error);
+        return;
+      }
+
+      console.log("Device found: ", device.name);
+    });
+  };
+
+  const onHeaderButtonPress = async () => {
+    console.log('Header Button Pressed');
+    const targetUserLocation = await getTargetUserLocation('ppsls@naver.com');
+    if (targetUserLocation && currentPosition) {
+      const distance = calculateDistance(
+        currentPosition.latitude,
+        currentPosition.longitude,
+        targetUserLocation.latitude,
+        targetUserLocation.longitude
+      );
+  
+      if (distance <= 0.5) { // 거리가 0.5km (500m) 이내인 경우
+        console.log('가까이 있음');
+      } else {
+        console.log('멀리 있음');
+      }
+    }
+  };
 
   if (!jobInfo || !currentPosition) {
     return (
@@ -105,10 +156,6 @@ export default function Maps() {
       </View>
     );
   }
-
-  const onHeaderButtonPress = () => {
-    console.log('Header Button Pressed');
-  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -127,7 +174,7 @@ export default function Maps() {
         <MapView
           ref={mapRef}
           style={styles.map}
-          provider={PROVIDER_GOOGLE} // Use Google Maps on iOS
+          provider={PROVIDER_GOOGLE}
           initialRegion={currentPosition}
           showsUserLocation={false}
         />
@@ -138,7 +185,7 @@ export default function Maps() {
               mapRef.current.animateToRegion(currentPosition, 1000);
             }}>
             <Image
-              style={{width: 24, height: 24, tintColor: '#FFF'}}
+              style={{ width: 24, height: 24, tintColor: '#FFF' }}
               source={require('../../assets/target.png')}
             />
           </TouchableOpacity>

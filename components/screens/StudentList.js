@@ -9,16 +9,13 @@ export default function StudentList() {
   useEffect(() => {
     const fetchStudents = async () => {
       try {
-        // 현재 로그인한 사용자의 정보를 가져옵니다.
         const uid = auth.currentUser.uid;
         const userDocRef = doc(firestore, 'users', uid);
         const userDocSnap = await getDoc(userDocRef);
     
         if (userDocSnap.exists()) {
           const { class: userClass, job: userJob } = userDocSnap.data();
-          // '선생님', '버스기사', '부모님' 중 하나일 때만 진행합니다.
           if (['선생님', '버스기사', '부모님'].includes(userJob)) {
-            // job이 '학생'이고 현재 사용자와 동일한 'class'를 가진 사용자들을 쿼리합니다.
             const studentsQuery = query(
               collection(firestore, 'users'),
               where('job', '==', '학생'),
