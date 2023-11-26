@@ -1,7 +1,22 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, FlatList } from 'react-native';
-import { auth, firestore } from '../Firebase';
-import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
+import React, {useState, useEffect} from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  SafeAreaView,
+  FlatList,
+  Image,
+  TouchableOpacity,
+} from 'react-native';
+import {auth, firestore} from '../Firebase';
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  doc,
+  getDoc,
+} from 'firebase/firestore';
 
 export default function StudentList() {
   const [students, setStudents] = useState([]);
@@ -12,14 +27,14 @@ export default function StudentList() {
         const uid = auth.currentUser.uid;
         const userDocRef = doc(firestore, 'users', uid);
         const userDocSnap = await getDoc(userDocRef);
-    
+
         if (userDocSnap.exists()) {
-          const { class: userClass, job: userJob } = userDocSnap.data();
+          const {class: userClass, job: userJob} = userDocSnap.data();
           if (['선생님', '버스기사', '부모님'].includes(userJob)) {
             const studentsQuery = query(
               collection(firestore, 'users'),
               where('job', '==', '학생'),
-              where('class', '==', userClass)
+              where('class', '==', userClass),
             );
             const querySnapshot = await getDocs(studentsQuery);
             if (querySnapshot.docs.length === 0) {
@@ -27,7 +42,7 @@ export default function StudentList() {
             } else {
               const userList = querySnapshot.docs.map(userDoc => {
                 const userData = userDoc.data();
-                return { id: userDoc.id, ...userData };
+                return {id: userDoc.id, ...userData};
               });
               setStudents(userList);
             }
@@ -38,22 +53,53 @@ export default function StudentList() {
           console.log('User document does not exist.');
         }
       } catch (error) {
-        console.error("Error fetching students:", error);
+        console.error('Error fetching students:', error);
       }
     };
-  
+
     fetchStudents();
   }, []);
-  
 
-  const renderItem = ({ item }) => (
+  const renderItem = ({item}) => (
     <View style={styles.itemContainer}>
-      <Text style={styles.itemText}>{item.name} - {item.class}</Text>
+      <Image
+        style={{width: 67, height: 67}}
+        source={require('../../image/학생.png')}
+      />
+      <Text style={styles.itemText}>
+        {item.name} - {item.class}
+      </Text>
+      <Text>체크박스 자리</Text>
     </View>
   );
 
   return (
     <SafeAreaView style={styles.container}>
+      <View style={{height: 220, flexDirection: 'row', alignItems: 'center'}}>
+        <View
+          style={{
+            width: 165,
+            height: 220,
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: '#fff',
+            marginLeft: 20,
+            borderRadius: 15,
+          }}>
+          <Image
+            style={{width: 93, height: 93}}
+            source={require('../../image/선생님.png')}
+          />
+          <Text style={{fontSize: 20, fontWeight: 'bold', marginTop: 5}}>
+            선생님 이름
+          </Text>
+        </View>
+        <View>
+          <TouchableOpacity style={{backgroundColor: 'green', marginLeft: 50}}>
+            <Text>출석</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
       <FlatList
         data={students}
         renderItem={renderItem}
@@ -66,13 +112,17 @@ export default function StudentList() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    marginTop: 20,
+    backgroundColor: '#B1A8EB',
   },
   itemContainer: {
-    backgroundColor: '#f9c2ff',
+    flexDirection: 'row',
+    backgroundColor: '#F6F1E8',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     padding: 20,
     marginVertical: 8,
     marginHorizontal: 16,
+    borderRadius: 15,
   },
   itemText: {
     fontSize: 16,
