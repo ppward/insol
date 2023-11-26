@@ -132,7 +132,10 @@ export default function Maps() {
             onPress={() => {
               mapRef.current.animateToRegion(currentPosition, 1000);
             }}>
-            <Text style={styles.buttonText}>내 위치</Text>
+            <Image
+              style={{width: 28, height: 28, tintColor: '#fff'}}
+              source={require('../../assets/target.png')}
+            />
           </TouchableOpacity>
         )}
       </View>
@@ -186,7 +189,7 @@ const styles = StyleSheet.create({
   },
   mapContainer: {
     width: '80%',
-    height: '77%',
+    height: '70%',
     alignSelf: 'center',
     borderRadius: 15,
     overflow: 'hidden',
@@ -199,7 +202,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 20,
     right: 20,
-    backgroundColor: '#4E9F3D',
+    backgroundColor: '#9933FF',
     padding: 10,
     borderRadius: 20,
     elevation: 3,
