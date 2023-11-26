@@ -1,7 +1,22 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, FlatList } from 'react-native';
-import { auth, firestore } from '../Firebase';
-import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
+import React, {useState, useEffect} from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  SafeAreaView,
+  FlatList,
+  Image,
+  TouchableOpacity,
+} from 'react-native';
+import {auth, firestore} from '../Firebase';
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  doc,
+  getDoc,
+} from 'firebase/firestore';
 
 export default function StudentList() {
   const [students, setStudents] = useState([]);
@@ -22,7 +37,7 @@ export default function StudentList() {
             studentsQuery = query(
               collection(firestore, 'users'),
               where('job', '==', '학생'),
-              where('class', '==', userClass)
+              where('class', '==', userClass),
             );
           } else if (userJob === '학부모') {
             studentsQuery = query(
@@ -52,22 +67,53 @@ export default function StudentList() {
           console.log('User document does not exist.');
         }
       } catch (error) {
-        console.error("Error fetching students:", error);
+        console.error('Error fetching students:', error);
       }
     };
 
     fetchStudents();
   }, []);
 
-
-  const renderItem = ({ item }) => (
+  const renderItem = ({item}) => (
     <View style={styles.itemContainer}>
-      <Text style={styles.itemText}>{item.name} - {item.class}</Text>
+      <Image
+        style={{width: 67, height: 67}}
+        source={require('../../image/학생.png')}
+      />
+      <Text style={styles.itemText}>
+        {item.name} - {item.class}
+      </Text>
+      <Text>체크박스 자리</Text>
     </View>
   );
 
   return (
     <SafeAreaView style={styles.container}>
+      <View style={{height: 220, flexDirection: 'row', alignItems: 'center'}}>
+        <View
+          style={{
+            width: 165,
+            height: 220,
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: '#fff',
+            marginLeft: 20,
+            borderRadius: 15,
+          }}>
+          <Image
+            style={{width: 93, height: 93}}
+            source={require('../../image/선생님.png')}
+          />
+          <Text style={{fontSize: 20, fontWeight: 'bold', marginTop: 5}}>
+            선생님 이름
+          </Text>
+        </View>
+        <View>
+          <TouchableOpacity style={{backgroundColor: 'green', marginLeft: 50}}>
+            <Text>출석</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
       <FlatList
         data={students}
         renderItem={renderItem}
@@ -80,13 +126,17 @@ export default function StudentList() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    marginTop: 20,
+    backgroundColor: '#B1A8EB',
   },
   itemContainer: {
-    backgroundColor: '#f9c2ff',
+    flexDirection: 'row',
+    backgroundColor: '#F6F1E8',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     padding: 20,
     marginVertical: 8,
     marginHorizontal: 16,
+    borderRadius: 15,
   },
   itemText: {
     fontSize: 16,

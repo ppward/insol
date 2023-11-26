@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import {
   View,
   Text,
@@ -58,7 +58,6 @@ export default function Maps() {
   const [currentPosition, setCurrentPosition] = useState(null);
   const [users, setUsers] = useState([]); // 사용자들의 위치 데이터
   const mapRef = useRef(null);
-  const bleManager = new BleManager();
 
   const startBluetoothScan = () => {
     bleManager.startDeviceScan(null, null, (error, device) => {
@@ -181,7 +180,7 @@ export default function Maps() {
         <MapView
           ref={mapRef}
           style={styles.map}
-          provider={PROVIDER_GOOGLE}
+          provider={PROVIDER_GOOGLE} // Use Google Maps on iOS
           initialRegion={currentPosition}
           showsUserLocation={true}
         >
@@ -246,8 +245,6 @@ const styles = StyleSheet.create({
   },
   headerText: {
     fontSize: 18,
-    fontWeight: 'bold',
-    marginLeft: 25,
   },
   mapContainer: {
     width: '80%',
@@ -264,7 +261,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 20,
     right: 20,
-    backgroundColor: '#46afcf',
+    backgroundColor: '#9933FF',
     padding: 10,
     borderRadius: 20,
     elevation: 3,

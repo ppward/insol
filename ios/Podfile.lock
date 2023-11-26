@@ -138,6 +138,7 @@ PODS:
     - hermes-engine/Pre-built (= 0.72.4)
   - hermes-engine/Pre-built (0.72.4)
   - libevent (2.1.12)
+  - MultiplatformBleAdapter (0.2.0)
   - nanopb (2.30909.1):
     - nanopb/decode (= 2.30909.1)
     - nanopb/encode (= 2.30909.1)
@@ -444,6 +445,10 @@ PODS:
   - React-jsinspector (0.72.4)
   - React-logger (0.72.4):
     - glog
+  - react-native-ble-plx (3.1.2-rc.0):
+    - MultiplatformBleAdapter (= 0.2.0)
+    - RCT-Folly (= 2021.07.22.00)
+    - React-Core
   - react-native-geolocation (3.1.0):
     - React-Core
   - react-native-google-maps (1.8.0):
@@ -647,6 +652,7 @@ DEPENDENCIES:
   - React-jsiexecutor (from `../node_modules/react-native/ReactCommon/jsiexecutor`)
   - React-jsinspector (from `../node_modules/react-native/ReactCommon/jsinspector`)
   - React-logger (from `../node_modules/react-native/ReactCommon/logger`)
+  - react-native-ble-plx (from `../node_modules/react-native-ble-plx`)
   - "react-native-geolocation (from `../node_modules/@react-native-community/geolocation`)"
   - react-native-google-maps (from `../node_modules/react-native-maps`)
   - react-native-maps (from `../node_modules/react-native-maps`)
@@ -694,6 +700,7 @@ SPEC REPOS:
     - GoogleUtilities
     - GTMSessionFetcher
     - libevent
+    - MultiplatformBleAdapter
     - nanopb
     - PromisesObjC
     - RecaptchaInterop
@@ -746,6 +753,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon/jsinspector"
   React-logger:
     :path: "../node_modules/react-native/ReactCommon/logger"
+  react-native-ble-plx:
+    :path: "../node_modules/react-native-ble-plx"
   react-native-geolocation:
     :path: "../node_modules/@react-native-community/geolocation"
   react-native-google-maps:
@@ -835,6 +844,7 @@ SPEC CHECKSUMS:
   GTMSessionFetcher: e8647203b65cee28c5f73d0f473d096653945e72
   hermes-engine: 81191603c4eaa01f5e4ae5737a9efcf64756c7b2
   libevent: 4049cae6c81cdb3654a443be001fb9bdceff7913
+  MultiplatformBleAdapter: b1fddd0d499b96b607e00f0faa8e60648343dc1d
   nanopb: d4d75c12cd1316f4a64e3c6963f879ecd4b5e0d5
   PromisesObjC: c50d2056b5253dadbd6c2bea79b0674bd5a52fa4
   RCT-Folly: 424b8c9a7a0b9ab2886ffe9c3b041ef628fd4fb1
@@ -852,6 +862,7 @@ SPEC CHECKSUMS:
   React-jsiexecutor: c7f826e40fa9cab5d37cab6130b1af237332b594
   React-jsinspector: aaed4cf551c4a1c98092436518c2d267b13a673f
   React-logger: da1ebe05ae06eb6db4b162202faeafac4b435e77
+  react-native-ble-plx: 1825d0f2b33cd6203f3cc01c2d02a2b0deec1edc
   react-native-geolocation: ef66fb798d96284c6043f0b16c15d9d1d4955db4
   react-native-google-maps: 356b9d01da0920be13e4c4dc83673b30e8a22c16
   react-native-maps: f699e0753c22c4d5c3a44d03895b193a4dbca6c2
