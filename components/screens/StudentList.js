@@ -17,10 +17,10 @@ import {
   doc,
   getDoc,
 } from 'firebase/firestore';
-
+import {CheckBox} from '@rneui/themed';
 export default function StudentList() {
   const [students, setStudents] = useState([]);
-
+  const [checked, setChecked] = useState(false);
   useEffect(() => {
     const fetchStudents = async () => {
       try {
@@ -69,7 +69,13 @@ export default function StudentList() {
       <Text style={styles.itemText}>
         {item.name} - {item.class}
       </Text>
-      <Text>체크박스 자리</Text>
+      <CheckBox
+        checked={checked}
+        onPress={() => setChecked(!checked)}
+        iconType="material-community"
+        checkedIcon="checkbox-outline"
+        uncheckedIcon={'checkbox-blank-outline'}
+      />
     </View>
   );
 
