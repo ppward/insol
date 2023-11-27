@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useRef} from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -12,9 +12,10 @@ import {
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import Geolocation from '@react-native-community/geolocation';
 import { auth, firestore } from '../Firebase';
-import { doc, getDoc, setDoc, collection, getDocs } from 'firebase/firestore';
+import { doc, getDoc, setDoc, collection, query, where, onSnapshot } from 'firebase/firestore';
 import { BleManager } from 'react-native-ble-plx';
 
+// 직업별 이미지와 텍스트 상세 정보
 const jobDetails = {
   선생님: {
     image: require('../../image/선생님.png'),
@@ -34,6 +35,7 @@ const jobDetails = {
   },
 };
 
+// 사용자의 현재 위치를 Firebase에 업데이트하는 함수
 const updateLocationInFirebase = async (latitude, longitude) => {
   try {
     const uid = auth.currentUser.uid;
@@ -56,9 +58,11 @@ const updateLocationInFirebase = async (latitude, longitude) => {
 export default function Maps() {
   const [jobInfo, setJobInfo] = useState(null);
   const [currentPosition, setCurrentPosition] = useState(null);
-  const [users, setUsers] = useState([]); // 사용자들의 위치 데이터
+  const [filteredUsers, setFilteredUsers] = useState([]);
   const mapRef = useRef(null);
+  const bleManager = new BleManager();
 
+  // 블루투스 스캔 시작 함수
   const startBluetoothScan = () => {
     bleManager.startDeviceScan(null, null, (error, device) => {
       if (error) {
@@ -70,15 +74,17 @@ export default function Maps() {
     });
   };
 
+  // 블루투스 버튼 클릭 핸들러
   const onHeaderButtonPress = () => {
     console.log('Header Button Pressed');
     startBluetoothScan();
   };
 
+  // 위치 권한 요청 및 사용자 정보 가져오기
   useEffect(() => {
     const requestLocationPermission = async () => {
       if (Platform.OS === 'ios') {
-        // iOS 권한 요청 로직 (필요한 경우)
+        // iOS 권한 요청 로직
       } else if (Platform.OS === 'android') {
         const response = await PermissionsAndroid.request(
           PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
@@ -89,6 +95,7 @@ export default function Maps() {
         }
       }
 
+      // 현재 위치 가져오기
       Geolocation.getCurrentPosition(
         position => {
           const { latitude, longitude } = position.coords;
@@ -106,6 +113,7 @@ export default function Maps() {
       );
     };
 
+    // 사용자 직업 정보 가져오기
     const fetchUserJob = async () => {
       try {
         const uid = auth.currentUser.uid;
@@ -123,21 +131,11 @@ export default function Maps() {
       }
     };
 
+    // 권한 요청 및 사용자 정보 가져오기 실행
     requestLocationPermission();
     fetchUserJob();
 
-    // 사용자들의 위치 데이터 가져오기
-    const fetchUsersLocation = async () => {
-      const querySnapshot = await getDocs(collection(firestore, 'users'));
-      const usersData = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setUsers(usersData);
-    };
-
-    fetchUsersLocation();
-
+    // 주기적으로 현재 위치 업데이트
     const intervalId = setInterval(() => {
       Geolocation.getCurrentPosition(
         position => {
@@ -147,12 +145,60 @@ export default function Maps() {
         error => {
           console.error(error);
         },
-        { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 } // 수정된 부분
       );
     }, 60000); // 1분마다 실행
-  
+
     // 컴포넌트 언마운트 시 인터벌 정리
     return () => clearInterval(intervalId);
+  }, []);
+
+  // 필터링된 사용자 위치 데이터 가져오기
+  useEffect(() => {
+    const fetchFilteredUsers = async () => {
+      try {
+        const uid = auth.currentUser.uid;
+        const userDocRef = doc(firestore, 'users', uid);
+        const userDocSnap = await getDoc(userDocRef);
+
+        if (userDocSnap.exists()) {
+          const { job: userJob, email: userEmail, class: userClass } = userDocSnap.data();
+
+          let usersQuery;
+          if (['선생님', '버스기사'].includes(userJob)) {
+            usersQuery = query(
+              collection(firestore, 'users'),
+              where('job', '==', '학생'),
+              where('class', '==', userClass),
+            );
+          } else if (userJob === '학부모') {
+            usersQuery = query(
+              collection(firestore, 'users'),
+              where('job', '==', '학생'),
+              where('parent', '==', userEmail),
+            );
+          } else {
+            // 다른 사용자 역할에 대한 처리
+            return;
+          }
+
+          // Firestore의 실시간 갱신 리스너 설정
+          const unsubscribe = onSnapshot(usersQuery, (querySnapshot) => {
+            const usersData = querySnapshot.docs.map(doc => ({
+              id: doc.id,
+              ...doc.data(),
+            }));
+            setFilteredUsers(usersData);
+          });
+
+          return unsubscribe; // 컴포넌트 언마운트 시 리스너 해제
+        }
+      } catch (error) {
+        console.error("Error fetching filtered users:", error);
+      }
+    };
+
+    fetchFilteredUsers();
   }, []);
 
   if (!jobInfo || !currentPosition) {
@@ -180,11 +226,11 @@ export default function Maps() {
         <MapView
           ref={mapRef}
           style={styles.map}
-          provider={PROVIDER_GOOGLE} // Use Google Maps on iOS
+          provider={PROVIDER_GOOGLE}
           initialRegion={currentPosition}
           showsUserLocation={true}
         >
-          {users.map(user => (
+          {filteredUsers.map(user => (
             user.location && (
               <Marker
                 key={user.id}
@@ -192,11 +238,23 @@ export default function Maps() {
                   latitude: user.location.latitude,
                   longitude: user.location.longitude,
                 }}
-                title={user.name || 'Unknown'} // 'name' 필드가 없는 경우 'Unknown' 표시
+                title={user.name || 'Unknown'}
               />
             )
           ))}
         </MapView>
+        {currentPosition && (
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => {
+              mapRef.current.animateToRegion(currentPosition, 1000);
+            }}>
+            <Image
+              style={{width: 28, height: 28, tintColor: '#fff'}}
+              source={require('../../assets/target.png')}
+            />
+          </TouchableOpacity>
+        )}
       </View>
     </SafeAreaView>
   );
