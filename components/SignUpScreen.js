@@ -12,7 +12,7 @@ import {
   Dimensions,
   TouchableWithoutFeedback,
 } from 'react-native';
-import { auth, firestore } from './Firebase'; // Firebase 설정이 올바르게 되어있어야 합니다.
+import { auth, firestore } from './Firebase';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { query, collection, where, getDocs ,setDoc, doc } from 'firebase/firestore';
 
@@ -45,7 +45,6 @@ const SignUpScreen = ({ navigation }) => {
     }
 
     if (inputJob === '학부모') {
-      // 학부모 회원가입 시 학생 이메일 검증 및 부모 정보 업데이트
       if (!inputStudentEmail.includes('@')) {
         Alert.alert('Error', 'Invalid student email format');
         return;
@@ -70,7 +69,7 @@ const SignUpScreen = ({ navigation }) => {
             Alert.alert('Error', 'A parent is already registered for this student');
             return;
           } else {
-            studentClass = studentData.class; // 학생의 class 정보 저장
+            studentClass = studentData.class;
             await setDoc(studentDoc.ref, { ...studentData, parent: inputEmail });
           }
         }
@@ -79,8 +78,7 @@ const SignUpScreen = ({ navigation }) => {
         return;
       }
     }
-  
-    // 계정 생성 로직
+
     try {
       const userCredential = await createUserWithEmailAndPassword(
         auth,
@@ -89,7 +87,7 @@ const SignUpScreen = ({ navigation }) => {
       );
       await setDoc(doc(firestore, 'users', userCredential.user.uid), {
         email: inputEmail,
-        class: inputJob === '학부모' ? studentClass : inputClass, // 학부모는 학생의 class 사용
+        class: inputJob === '학부모' ? studentClass : inputClass,
         name: inputName,
         job: inputJob,
         studentEmail: inputJob === '학부모' ? inputStudentEmail : null,
@@ -239,7 +237,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)', // 반투명 배경
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalView: {
     width: 320,

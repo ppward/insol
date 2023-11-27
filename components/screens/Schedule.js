@@ -41,15 +41,6 @@ export default function Schedule() {
           justifyContent: 'center',
           backgroundColor: 'lightgrey',
         }}>
-        <MapView
-          style={{flex: 1}}
-          initialRegion={{
-            latitude: 37.3,
-            longitude: 127.07,
-            latitudeDelta: 0.9,
-            longitudeDelta: 0.4,
-          }}
-        />
       </View>
     </SafeAreaView>
   );
