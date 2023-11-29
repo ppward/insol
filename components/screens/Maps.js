@@ -13,9 +13,7 @@ import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import Geolocation from '@react-native-community/geolocation';
 import { auth, firestore } from '../Firebase';
 import { doc, getDoc, setDoc, collection, query, where, onSnapshot } from 'firebase/firestore';
-import { BleManager } from 'react-native-ble-plx';
 
-// 직업별 이미지와 텍스트 상세 정보
 const jobDetails = {
   선생님: {
     image: require('../../image/선생님.png'),
@@ -35,7 +33,6 @@ const jobDetails = {
   },
 };
 
-// 사용자의 현재 위치를 Firebase에 업데이트하는 함수
 const updateLocationInFirebase = async (latitude, longitude) => {
   try {
     const uid = auth.currentUser.uid;
@@ -60,31 +57,11 @@ export default function Maps() {
   const [currentPosition, setCurrentPosition] = useState(null);
   const [filteredUsers, setFilteredUsers] = useState([]);
   const mapRef = useRef(null);
-  const bleManager = new BleManager();
 
-  // 블루투스 스캔 시작 함수
-  const startBluetoothScan = () => {
-    bleManager.startDeviceScan(null, null, (error, device) => {
-      if (error) {
-        console.log(error);
-        return;
-      }
-
-      console.log("Device found: ", device.name);
-    });
-  };
-
-  // 블루투스 버튼 클릭 핸들러
-  const onHeaderButtonPress = () => {
-    console.log('Header Button Pressed');
-    startBluetoothScan();
-  };
-
-  // 위치 권한 요청 및 사용자 정보 가져오기
   useEffect(() => {
     const requestLocationPermission = async () => {
       if (Platform.OS === 'ios') {
-        // iOS 권한 요청 로직
+        // iOS 권한 요청 코드
       } else if (Platform.OS === 'android') {
         const response = await PermissionsAndroid.request(
           PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
@@ -94,8 +71,8 @@ export default function Maps() {
           return;
         }
       }
-
-      // 현재 위치 가져오기
+  
+      // 위치 가져오기
       Geolocation.getCurrentPosition(
         position => {
           const { latitude, longitude } = position.coords;
@@ -105,6 +82,8 @@ export default function Maps() {
             latitudeDelta: 0.005,
             longitudeDelta: 0.005,
           });
+          // Firebase에 위치 업데이트
+          updateLocationInFirebase(latitude, longitude);
         },
         error => {
           console.error(error);
@@ -113,7 +92,6 @@ export default function Maps() {
       );
     };
 
-    // 사용자 직업 정보 가져오기
     const fetchUserJob = async () => {
       try {
         const uid = auth.currentUser.uid;
@@ -131,11 +109,9 @@ export default function Maps() {
       }
     };
 
-    // 권한 요청 및 사용자 정보 가져오기 실행
     requestLocationPermission();
     fetchUserJob();
 
-    // 주기적으로 현재 위치 업데이트
     const intervalId = setInterval(() => {
       Geolocation.getCurrentPosition(
         position => {
@@ -145,15 +121,13 @@ export default function Maps() {
         error => {
           console.error(error);
         },
-        { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 } // 수정된 부분
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
       );
-    }, 60000); // 1분마다 실행
+    }, 30000);
 
-    // 컴포넌트 언마운트 시 인터벌 정리
     return () => clearInterval(intervalId);
   }, []);
 
-  // 필터링된 사용자 위치 데이터 가져오기
   useEffect(() => {
     const fetchFilteredUsers = async () => {
       try {
@@ -178,11 +152,9 @@ export default function Maps() {
               where('parent', '==', userEmail),
             );
           } else {
-            // 다른 사용자 역할에 대한 처리
             return;
           }
 
-          // Firestore의 실시간 갱신 리스너 설정
           const unsubscribe = onSnapshot(usersQuery, (querySnapshot) => {
             const usersData = querySnapshot.docs.map(doc => ({
               id: doc.id,
@@ -191,7 +163,7 @@ export default function Maps() {
             setFilteredUsers(usersData);
           });
 
-          return unsubscribe; // 컴포넌트 언마운트 시 리스너 해제
+          return unsubscribe;
         }
       } catch (error) {
         console.error("Error fetching filtered users:", error);
@@ -216,11 +188,6 @@ export default function Maps() {
           <Image source={jobInfo.image} style={styles.profilePic} />
           <Text style={styles.headerText}>{jobInfo.text}</Text>
         </View>
-        <TouchableOpacity
-          style={styles.headerButton}
-          onPress={onHeaderButtonPress}>
-          <Text style={styles.headerButtonText}>버튼</Text>
-        </TouchableOpacity>
       </View>
       <View style={styles.mapContainer}>
         <MapView
@@ -273,16 +240,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 40,
     width: '100%',
   },
-  headerButton: {
-    backgroundColor: '#4E9F3D',
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    borderRadius: 5,
-  },
-  headerButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-  },
   profileContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -327,9 +284,5 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     shadowColor: 'black',
     shadowOffset: { height: 3, width: 3 },
-  },
-  buttonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
   },
 });
