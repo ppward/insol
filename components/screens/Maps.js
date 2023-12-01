@@ -11,23 +11,8 @@ import {
 } from 'react-native';
 import MapView, {Marker, PROVIDER_GOOGLE} from 'react-native-maps';
 import Geolocation from '@react-native-community/geolocation';
-<<<<<<< HEAD
-import {auth, firestore} from '../Firebase';
-import {
-  doc,
-  getDoc,
-  setDoc,
-  collection,
-  query,
-  where,
-  onSnapshot,
-} from 'firebase/firestore';
-
-// import { BleManager } from 'react-native-ble-plx';
-=======
 import { auth, firestore } from '../Firebase';
 import { doc, getDoc, setDoc, collection, query, where, onSnapshot, getDocs } from 'firebase/firestore';
->>>>>>> 094df40230b0082b61cea1cf450def6c08dad035
 
 const jobDetails = {
   선생님: {
@@ -76,33 +61,8 @@ export default function Maps() {
   const [currentPosition, setCurrentPosition] = useState(null);
   const [filteredUsers, setFilteredUsers] = useState([]);
   const mapRef = useRef(null);
-<<<<<<< HEAD
-
-  //const bleManager = new BleManager();
-
-  // 블루투스 스캔 시작 함수
-  /*const startBluetoothScan = () => {
-    bleManager.startDeviceScan(null, null, (error, device) => {
-      if (error) {
-        console.log(error);
-        return;
-      }
-
-      console.log("Device found: ", device.name);
-    });
-  };
-
-  // 블루투스 버튼 클릭 핸들러
-  const onHeaderButtonPress = () => {
-    console.log('Header Button Pressed');
-    startBluetoothScan();
-  };
-*/
-  // 위치 권한 요청 및 사용자 정보 가져오기
-=======
-
->>>>>>> 094df40230b0082b61cea1cf450def6c08dad035
   useEffect(() => {
+    
     const requestLocationPermission = async () => {
       if (Platform.OS === 'ios') {
         // iOS 권한 요청 코드
@@ -152,7 +112,6 @@ export default function Maps() {
         console.error("Error fetching user's job:", error);
       }
     };
-
     requestLocationPermission();
     fetchUserJob();
 
@@ -165,54 +124,11 @@ export default function Maps() {
         error => {
           console.error(error);
         },
-<<<<<<< HEAD
-        {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000}, // 수정된 부분
-      );
-    }, 600000); // 10분마다 실행
-
-    // 컴포넌트 언마운트 시 인터벌 정리
-    // // 백그라운드 지오클로케이션 설정
-    // BackgroundGeolocation.onLocation(
-    //   location => {
-    //     const {latitude, longitude} = location.coords;
-    //     setCurrentPosition({
-    //       latitude,
-    //       longitude,
-    //       latitudeDelta: 0.0922,
-    //       longitudeDelta: 0.0421,
-    //     });
-    //     updateLocationInFirebase(latitude, longitude);
-    //   },
-    //   error => console.warn(error),
-    // );
-
-    // BackgroundGeolocation.ready(
-    //   {
-    //     desiredAccuracy: BackgroundGeolocation.DESIRED_ACCURACY_HIGH,
-    //     distanceFilter: 10,
-    //     stopOnTerminate: false,
-    //     startOnBoot: true,
-    //     debug: true,
-    //     logLevel: BackgroundGeolocation.LOG_LEVEL_VERBOSE,
-    //   },
-    //   state => {
-    //     if (!state.enabled) {
-    //       BackgroundGeolocation.start();
-    //     }
-    //   },
-    // );
-
-    return () => {
-      // BackgroundGeolocation.removeListeners();
-      clearInterval(intervalId);
-    };
-=======
         { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
       );
     }, 600000);
 
     return () => clearInterval(intervalId);
->>>>>>> 094df40230b0082b61cea1cf450def6c08dad035
   }, []);
 
   useEffect(() => {

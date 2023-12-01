@@ -18,12 +18,6 @@ import {
   getDoc,
   updateDoc,
 } from 'firebase/firestore';
-<<<<<<< HEAD
-import {CheckBox} from '@rneui/themed';
-export default function StudentList() {
-  const [students, setStudents] = useState([]);
-  const [checked, setChecked] = useState(false);
-=======
 import { CheckBox } from '@rneui/themed';
 import { PermissionsAndroid, Platform } from 'react-native';
 import Geolocation from '@react-native-community/geolocation';
@@ -40,7 +34,6 @@ export default function StudentList() {
       Geolocation.requestAuthorization('whenInUse');
       return true;
     }
->>>>>>> 094df40230b0082b61cea1cf450def6c08dad035
 
     const granted = await PermissionsAndroid.request(
       PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
@@ -86,13 +79,6 @@ export default function StudentList() {
         const userDocSnap = await getDoc(userDocRef);
 
         if (userDocSnap.exists()) {
-<<<<<<< HEAD
-          const {job: userJob, email: userEmail} = userDocSnap.data();
-
-          let studentsQuery;
-          if (['선생님', '버스기사'].includes(userJob)) {
-            const {class: userClass} = userDocSnap.data();
-=======
           const { job: userJob, email: userEmail, class: userClass, name: userName } = userDocSnap.data();
           let studentsQuery;
           if (['선생님', '버스기사'].includes(userJob)) {
@@ -101,7 +87,6 @@ export default function StudentList() {
             }
             const { class: userClass } = userDocSnap.data();
             setUserClass(userClass);
->>>>>>> 094df40230b0082b61cea1cf450def6c08dad035
             studentsQuery = query(
               collection(firestore, 'users'),
               where('job', '==', '학생'),
@@ -123,19 +108,6 @@ export default function StudentList() {
           if (querySnapshot.docs.length === 0) {
             console.log('No students found.');
           } else {
-<<<<<<< HEAD
-            const userList = querySnapshot.docs
-              .map(userDoc => {
-                const userData = userDoc.data();
-                console.log(`Student's email: ${userData.email}`);
-                if (userJob === '학부모' && userData.parent !== userEmail) {
-                  return null;
-                }
-                return {id: userDoc.id, ...userData};
-              })
-              .filter(Boolean);
-            setStudents(userList);
-=======
             const fetchedStudents = [];
             const fetchedCheckedIds = {};
 
@@ -159,7 +131,6 @@ export default function StudentList() {
 
             setStudents(fetchedStudents);
             setCheckedIds(fetchedCheckedIds);
->>>>>>> 094df40230b0082b61cea1cf450def6c08dad035
           }
         } else {
           console.log('User document does not exist.');
@@ -230,13 +201,8 @@ export default function StudentList() {
         {item.name}
       </Text>
       <CheckBox
-<<<<<<< HEAD
-        checked={checked}
-        onPress={() => setChecked(!checked)}
-=======
         checked={!!checkedIds[item.id]}
         disabled={true} // 체크박스를 비활성화합니다.
->>>>>>> 094df40230b0082b61cea1cf450def6c08dad035
         iconType="material-community"
         checkedIcon="checkbox-outline"
         uncheckedIcon={'checkbox-blank-outline'}
