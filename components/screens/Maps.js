@@ -246,11 +246,6 @@ export default function Maps() {
             const studentsSnapshot = await getDocs(studentsQuery);
             const childrenClasses = studentsSnapshot.docs.map(doc => doc.data().class);
 
-<<<<<<< HEAD
-          // Firestore의 실시간 갱신 리스너 설정
-          const unsubscribe = onSnapshot(usersQuery, querySnapshot => {
-            const usersData = querySnapshot.docs.map(doc => ({
-=======
             // 해당 반의 선생님 조회
             const teachersQuery = query(
               collection(firestore, 'users'),
@@ -259,7 +254,6 @@ export default function Maps() {
             );
             const teachersSnapshot = await getDocs(teachersQuery);
             const teachersData = teachersSnapshot.docs.map(doc => ({
->>>>>>> 094df40230b0082b61cea1cf450def6c08dad035
               id: doc.id,
               ...doc.data(),
             }));
