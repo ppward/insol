@@ -338,7 +338,6 @@ export default function Maps() {
             }
             return null;
           })}
->>>>>>> 094df40230b0082b61cea1cf450def6c08dad035
         </MapView>
         {currentPosition && (
           <TouchableOpacity
