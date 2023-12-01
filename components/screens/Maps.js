@@ -12,7 +12,7 @@ import {
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import Geolocation from '@react-native-community/geolocation';
 import { auth, firestore } from '../Firebase';
-import { doc, getDoc, setDoc, collection, query, where, onSnapshot } from 'firebase/firestore';
+import { doc, getDoc, setDoc, collection, query, where, onSnapshot, getDocs } from 'firebase/firestore';
 
 const jobDetails = {
   선생님: {
@@ -71,7 +71,7 @@ export default function Maps() {
           return;
         }
       }
-  
+
       // 위치 가져오기
       Geolocation.getCurrentPosition(
         position => {
@@ -123,7 +123,7 @@ export default function Maps() {
         },
         { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
       );
-    }, 30000);
+    }, 600000);
 
     return () => clearInterval(intervalId);
   }, []);
@@ -146,24 +146,50 @@ export default function Maps() {
               where('class', '==', userClass),
             );
           } else if (userJob === '학부모') {
+            // 자녀(학생) 조회
+            const studentsQuery = query(
+              collection(firestore, 'users'),
+              where('parent', '==', userEmail),
+              where('job', '==', '학생')
+            );
+            const studentsSnapshot = await getDocs(studentsQuery);
+            const childrenClasses = studentsSnapshot.docs.map(doc => doc.data().class);
+
+            // 해당 반의 선생님 조회
+            const teachersQuery = query(
+              collection(firestore, 'users'),
+              where('class', 'in', childrenClasses),
+              where('job', '==', '선생님')
+            );
+            const teachersSnapshot = await getDocs(teachersQuery);
+            const teachersData = teachersSnapshot.docs.map(doc => ({
+              id: doc.id,
+              ...doc.data(),
+            }));
+
+            // 자녀와 선생님 정보를 상태에 저장
+            setFilteredUsers([...studentsSnapshot.docs.map(doc => doc.data()), ...teachersData]);
+          } else if (userJob === '학생') {
             usersQuery = query(
               collection(firestore, 'users'),
-              where('job', '==', '학생'),
-              where('parent', '==', userEmail),
+              where('job', '==', '선생님'),
+              where('class', '==', userClass),
             );
           } else {
             return;
           }
 
-          const unsubscribe = onSnapshot(usersQuery, (querySnapshot) => {
-            const usersData = querySnapshot.docs.map(doc => ({
-              id: doc.id,
-              ...doc.data(),
-            }));
-            setFilteredUsers(usersData);
-          });
+          if (usersQuery) {
+            const unsubscribe = onSnapshot(usersQuery, (querySnapshot) => {
+              const usersData = querySnapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data(),
+              }));
+              setFilteredUsers(usersData);
+            });
 
-          return unsubscribe;
+            return unsubscribe;
+          }
         }
       } catch (error) {
         console.error("Error fetching filtered users:", error);
@@ -172,6 +198,8 @@ export default function Maps() {
 
     fetchFilteredUsers();
   }, []);
+
+
 
   if (!jobInfo || !currentPosition) {
     return (
@@ -197,18 +225,22 @@ export default function Maps() {
           initialRegion={currentPosition}
           showsUserLocation={true}
         >
-          {filteredUsers.map(user => (
-            user.location && (
-              <Marker
-                key={user.id}
-                coordinate={{
-                  latitude: user.location.latitude,
-                  longitude: user.location.longitude,
-                }}
-                title={user.name || 'Unknown'}
-              />
-            )
-          ))}
+          {filteredUsers.map((user, index) => {
+            if (user.location) {
+              const key = user.id ? user.id.toString() : `user-${index}`;
+              return (
+                <Marker
+                  key={key}
+                  coordinate={{
+                    latitude: user.location.latitude,
+                    longitude: user.location.longitude,
+                  }}
+                  title={user.name || 'Unknown'}
+                />
+              );
+            }
+            return null;
+          })}
         </MapView>
         {currentPosition && (
           <TouchableOpacity
@@ -217,7 +249,7 @@ export default function Maps() {
               mapRef.current.animateToRegion(currentPosition, 1000);
             }}>
             <Image
-              style={{width: 28, height: 28, tintColor: '#fff'}}
+              style={{ width: 28, height: 28, tintColor: '#fff' }}
               source={require('../../assets/target.png')}
             />
           </TouchableOpacity>
