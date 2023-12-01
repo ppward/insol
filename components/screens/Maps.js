@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import MapView, {Marker, PROVIDER_GOOGLE} from 'react-native-maps';
 import Geolocation from '@react-native-community/geolocation';
+<<<<<<< HEAD
 import {auth, firestore} from '../Firebase';
 import {
   doc,
@@ -23,8 +24,11 @@ import {
 } from 'firebase/firestore';
 
 // import { BleManager } from 'react-native-ble-plx';
+=======
+import { auth, firestore } from '../Firebase';
+import { doc, getDoc, setDoc, collection, query, where, onSnapshot, getDocs } from 'firebase/firestore';
+>>>>>>> 094df40230b0082b61cea1cf450def6c08dad035
 
-// 직업별 이미지와 텍스트 상세 정보
 const jobDetails = {
   선생님: {
     image: require('../../image/선생님.png'),
@@ -44,7 +48,6 @@ const jobDetails = {
   },
 };
 
-// 사용자의 현재 위치를 Firebase에 업데이트하는 함수
 const updateLocationInFirebase = async (latitude, longitude) => {
   try {
     const uid = auth.currentUser.uid;
@@ -73,6 +76,7 @@ export default function Maps() {
   const [currentPosition, setCurrentPosition] = useState(null);
   const [filteredUsers, setFilteredUsers] = useState([]);
   const mapRef = useRef(null);
+<<<<<<< HEAD
 
   //const bleManager = new BleManager();
 
@@ -95,10 +99,13 @@ export default function Maps() {
   };
 */
   // 위치 권한 요청 및 사용자 정보 가져오기
+=======
+
+>>>>>>> 094df40230b0082b61cea1cf450def6c08dad035
   useEffect(() => {
     const requestLocationPermission = async () => {
       if (Platform.OS === 'ios') {
-        // iOS 권한 요청 로직
+        // iOS 권한 요청 코드
       } else if (Platform.OS === 'android') {
         const response = await PermissionsAndroid.request(
           PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
@@ -109,7 +116,7 @@ export default function Maps() {
         }
       }
 
-      // 현재 위치 가져오기
+      // 위치 가져오기
       Geolocation.getCurrentPosition(
         position => {
           const {latitude, longitude} = position.coords;
@@ -119,6 +126,8 @@ export default function Maps() {
             latitudeDelta: 0.005,
             longitudeDelta: 0.005,
           });
+          // Firebase에 위치 업데이트
+          updateLocationInFirebase(latitude, longitude);
         },
         error => {
           console.error(error);
@@ -127,7 +136,6 @@ export default function Maps() {
       );
     };
 
-    // 사용자 직업 정보 가져오기
     const fetchUserJob = async () => {
       try {
         const uid = auth.currentUser.uid;
@@ -145,11 +153,9 @@ export default function Maps() {
       }
     };
 
-    // 권한 요청 및 사용자 정보 가져오기 실행
     requestLocationPermission();
     fetchUserJob();
 
-    // 주기적으로 현재 위치 업데이트
     const intervalId = setInterval(() => {
       Geolocation.getCurrentPosition(
         position => {
@@ -159,6 +165,7 @@ export default function Maps() {
         error => {
           console.error(error);
         },
+<<<<<<< HEAD
         {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000}, // 수정된 부분
       );
     }, 600000); // 10분마다 실행
@@ -199,9 +206,15 @@ export default function Maps() {
       // BackgroundGeolocation.removeListeners();
       clearInterval(intervalId);
     };
+=======
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+      );
+    }, 600000);
+
+    return () => clearInterval(intervalId);
+>>>>>>> 094df40230b0082b61cea1cf450def6c08dad035
   }, []);
 
-  // 필터링된 사용자 위치 데이터 가져오기
   useEffect(() => {
     const fetchFilteredUsers = async () => {
       try {
@@ -224,26 +237,56 @@ export default function Maps() {
               where('class', '==', userClass),
             );
           } else if (userJob === '학부모') {
-            usersQuery = query(
+            // 자녀(학생) 조회
+            const studentsQuery = query(
               collection(firestore, 'users'),
-              where('job', '==', '학생'),
               where('parent', '==', userEmail),
+              where('job', '==', '학생')
             );
-          } else {
-            // 다른 사용자 역할에 대한 처리
-            return;
-          }
+            const studentsSnapshot = await getDocs(studentsQuery);
+            const childrenClasses = studentsSnapshot.docs.map(doc => doc.data().class);
 
+<<<<<<< HEAD
           // Firestore의 실시간 갱신 리스너 설정
           const unsubscribe = onSnapshot(usersQuery, querySnapshot => {
             const usersData = querySnapshot.docs.map(doc => ({
+=======
+            // 해당 반의 선생님 조회
+            const teachersQuery = query(
+              collection(firestore, 'users'),
+              where('class', 'in', childrenClasses),
+              where('job', '==', '선생님')
+            );
+            const teachersSnapshot = await getDocs(teachersQuery);
+            const teachersData = teachersSnapshot.docs.map(doc => ({
+>>>>>>> 094df40230b0082b61cea1cf450def6c08dad035
               id: doc.id,
               ...doc.data(),
             }));
-            setFilteredUsers(usersData);
-          });
 
-          return unsubscribe; // 컴포넌트 언마운트 시 리스너 해제
+            // 자녀와 선생님 정보를 상태에 저장
+            setFilteredUsers([...studentsSnapshot.docs.map(doc => doc.data()), ...teachersData]);
+          } else if (userJob === '학생') {
+            usersQuery = query(
+              collection(firestore, 'users'),
+              where('job', '==', '선생님'),
+              where('class', '==', userClass),
+            );
+          } else {
+            return;
+          }
+
+          if (usersQuery) {
+            const unsubscribe = onSnapshot(usersQuery, (querySnapshot) => {
+              const usersData = querySnapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data(),
+              }));
+              setFilteredUsers(usersData);
+            });
+
+            return unsubscribe;
+          }
         }
       } catch (error) {
         console.error('Error fetching filtered users:', error);
@@ -252,6 +295,8 @@ export default function Maps() {
 
     fetchFilteredUsers();
   }, []);
+
+
 
   if (!jobInfo || !currentPosition) {
     return (
@@ -268,9 +313,6 @@ export default function Maps() {
           <Image source={jobInfo.image} style={styles.profilePic} />
           <Text style={styles.headerText}>{jobInfo.text}</Text>
         </View>
-        <TouchableOpacity style={styles.headerButton}>
-          <Text style={styles.headerButtonText}>버튼</Text>
-        </TouchableOpacity>
       </View>
       <View style={styles.mapContainer}>
         <MapView
@@ -278,20 +320,25 @@ export default function Maps() {
           style={styles.map}
           provider={PROVIDER_GOOGLE}
           initialRegion={currentPosition}
-          showsUserLocation={true}>
-          {filteredUsers.map(
-            user =>
-              user.location && (
+          showsUserLocation={true}
+        >
+          {filteredUsers.map((user, index) => {
+            if (user.location) {
+              const key = user.id ? user.id.toString() : `user-${index}`;
+              return (
                 <Marker
-                  key={user.id}
+                  key={key}
                   coordinate={{
                     latitude: user.location.latitude,
                     longitude: user.location.longitude,
                   }}
                   title={user.name || 'Unknown'}
                 />
-              ),
-          )}
+              );
+            }
+            return null;
+          })}
+>>>>>>> 094df40230b0082b61cea1cf450def6c08dad035
         </MapView>
         {currentPosition && (
           <TouchableOpacity
@@ -300,7 +347,7 @@ export default function Maps() {
               mapRef.current.animateToRegion(currentPosition, 1000);
             }}>
             <Image
-              style={{width: 28, height: 28, tintColor: '#fff'}}
+              style={{ width: 28, height: 28, tintColor: '#fff' }}
               source={require('../../assets/target.png')}
             />
           </TouchableOpacity>
@@ -322,16 +369,6 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     paddingHorizontal: 40,
     width: '100%',
-  },
-  headerButton: {
-    backgroundColor: '#4E9F3D',
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    borderRadius: 5,
-  },
-  headerButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
   },
   profileContainer: {
     flexDirection: 'row',
@@ -377,9 +414,5 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     shadowColor: 'black',
     shadowOffset: {height: 3, width: 3},
-  },
-  buttonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
   },
 });
