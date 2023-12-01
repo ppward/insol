@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import {
   View,
   Text,
@@ -9,11 +9,20 @@ import {
   PermissionsAndroid,
   Platform,
 } from 'react-native';
-import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
+import MapView, {Marker, PROVIDER_GOOGLE} from 'react-native-maps';
 import Geolocation from '@react-native-community/geolocation';
-import { auth, firestore } from '../Firebase';
-import { doc, getDoc, setDoc, collection, query, where, onSnapshot } from 'firebase/firestore';
-import { BleManager } from 'react-native-ble-plx';
+import {auth, firestore} from '../Firebase';
+import {
+  doc,
+  getDoc,
+  setDoc,
+  collection,
+  query,
+  where,
+  onSnapshot,
+} from 'firebase/firestore';
+
+// import { BleManager } from 'react-native-ble-plx';
 
 // 직업별 이미지와 텍스트 상세 정보
 const jobDetails = {
@@ -41,13 +50,17 @@ const updateLocationInFirebase = async (latitude, longitude) => {
     const uid = auth.currentUser.uid;
     const userLocationRef = doc(firestore, 'users', uid);
 
-    await setDoc(userLocationRef, {
-      location: {
-        latitude,
-        longitude,
-        timestamp: new Date().toISOString()
-      }
-    }, { merge: true });
+    await setDoc(
+      userLocationRef,
+      {
+        location: {
+          latitude,
+          longitude,
+          timestamp: new Date().toISOString(),
+        },
+      },
+      {merge: true},
+    );
 
     console.log('Location updated in Firebase');
   } catch (error) {
@@ -60,10 +73,11 @@ export default function Maps() {
   const [currentPosition, setCurrentPosition] = useState(null);
   const [filteredUsers, setFilteredUsers] = useState([]);
   const mapRef = useRef(null);
-  const bleManager = new BleManager();
+
+  //const bleManager = new BleManager();
 
   // 블루투스 스캔 시작 함수
-  const startBluetoothScan = () => {
+  /*const startBluetoothScan = () => {
     bleManager.startDeviceScan(null, null, (error, device) => {
       if (error) {
         console.log(error);
@@ -79,7 +93,7 @@ export default function Maps() {
     console.log('Header Button Pressed');
     startBluetoothScan();
   };
-
+*/
   // 위치 권한 요청 및 사용자 정보 가져오기
   useEffect(() => {
     const requestLocationPermission = async () => {
@@ -98,7 +112,7 @@ export default function Maps() {
       // 현재 위치 가져오기
       Geolocation.getCurrentPosition(
         position => {
-          const { latitude, longitude } = position.coords;
+          const {latitude, longitude} = position.coords;
           setCurrentPosition({
             latitude,
             longitude,
@@ -109,7 +123,7 @@ export default function Maps() {
         error => {
           console.error(error);
         },
-        { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+        {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000},
       );
     };
 
@@ -139,18 +153,52 @@ export default function Maps() {
     const intervalId = setInterval(() => {
       Geolocation.getCurrentPosition(
         position => {
-          const { latitude, longitude } = position.coords;
+          const {latitude, longitude} = position.coords;
           updateLocationInFirebase(latitude, longitude);
         },
         error => {
           console.error(error);
         },
-        { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 } // 수정된 부분
+        {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000}, // 수정된 부분
       );
-    }, 60000); // 1분마다 실행
+    }, 600000); // 10분마다 실행
 
     // 컴포넌트 언마운트 시 인터벌 정리
-    return () => clearInterval(intervalId);
+    // // 백그라운드 지오클로케이션 설정
+    // BackgroundGeolocation.onLocation(
+    //   location => {
+    //     const {latitude, longitude} = location.coords;
+    //     setCurrentPosition({
+    //       latitude,
+    //       longitude,
+    //       latitudeDelta: 0.0922,
+    //       longitudeDelta: 0.0421,
+    //     });
+    //     updateLocationInFirebase(latitude, longitude);
+    //   },
+    //   error => console.warn(error),
+    // );
+
+    // BackgroundGeolocation.ready(
+    //   {
+    //     desiredAccuracy: BackgroundGeolocation.DESIRED_ACCURACY_HIGH,
+    //     distanceFilter: 10,
+    //     stopOnTerminate: false,
+    //     startOnBoot: true,
+    //     debug: true,
+    //     logLevel: BackgroundGeolocation.LOG_LEVEL_VERBOSE,
+    //   },
+    //   state => {
+    //     if (!state.enabled) {
+    //       BackgroundGeolocation.start();
+    //     }
+    //   },
+    // );
+
+    return () => {
+      // BackgroundGeolocation.removeListeners();
+      clearInterval(intervalId);
+    };
   }, []);
 
   // 필터링된 사용자 위치 데이터 가져오기
@@ -162,7 +210,11 @@ export default function Maps() {
         const userDocSnap = await getDoc(userDocRef);
 
         if (userDocSnap.exists()) {
-          const { job: userJob, email: userEmail, class: userClass } = userDocSnap.data();
+          const {
+            job: userJob,
+            email: userEmail,
+            class: userClass,
+          } = userDocSnap.data();
 
           let usersQuery;
           if (['선생님', '버스기사'].includes(userJob)) {
@@ -183,7 +235,7 @@ export default function Maps() {
           }
 
           // Firestore의 실시간 갱신 리스너 설정
-          const unsubscribe = onSnapshot(usersQuery, (querySnapshot) => {
+          const unsubscribe = onSnapshot(usersQuery, querySnapshot => {
             const usersData = querySnapshot.docs.map(doc => ({
               id: doc.id,
               ...doc.data(),
@@ -194,7 +246,7 @@ export default function Maps() {
           return unsubscribe; // 컴포넌트 언마운트 시 리스너 해제
         }
       } catch (error) {
-        console.error("Error fetching filtered users:", error);
+        console.error('Error fetching filtered users:', error);
       }
     };
 
@@ -216,9 +268,7 @@ export default function Maps() {
           <Image source={jobInfo.image} style={styles.profilePic} />
           <Text style={styles.headerText}>{jobInfo.text}</Text>
         </View>
-        <TouchableOpacity
-          style={styles.headerButton}
-          onPress={onHeaderButtonPress}>
+        <TouchableOpacity style={styles.headerButton}>
           <Text style={styles.headerButtonText}>버튼</Text>
         </TouchableOpacity>
       </View>
@@ -228,20 +278,20 @@ export default function Maps() {
           style={styles.map}
           provider={PROVIDER_GOOGLE}
           initialRegion={currentPosition}
-          showsUserLocation={true}
-        >
-          {filteredUsers.map(user => (
-            user.location && (
-              <Marker
-                key={user.id}
-                coordinate={{
-                  latitude: user.location.latitude,
-                  longitude: user.location.longitude,
-                }}
-                title={user.name || 'Unknown'}
-              />
-            )
-          ))}
+          showsUserLocation={true}>
+          {filteredUsers.map(
+            user =>
+              user.location && (
+                <Marker
+                  key={user.id}
+                  coordinate={{
+                    latitude: user.location.latitude,
+                    longitude: user.location.longitude,
+                  }}
+                  title={user.name || 'Unknown'}
+                />
+              ),
+          )}
         </MapView>
         {currentPosition && (
           <TouchableOpacity
@@ -326,7 +376,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.5,
     shadowRadius: 5,
     shadowColor: 'black',
-    shadowOffset: { height: 3, width: 3 },
+    shadowOffset: {height: 3, width: 3},
   },
   buttonText: {
     color: '#FFFFFF',

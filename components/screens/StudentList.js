@@ -21,6 +21,7 @@ import {CheckBox} from '@rneui/themed';
 export default function StudentList() {
   const [students, setStudents] = useState([]);
   const [checked, setChecked] = useState(false);
+
   useEffect(() => {
     const fetchStudents = async () => {
       try {
@@ -29,11 +30,11 @@ export default function StudentList() {
         const userDocSnap = await getDoc(userDocRef);
 
         if (userDocSnap.exists()) {
-          const { job: userJob, email: userEmail } = userDocSnap.data();
+          const {job: userJob, email: userEmail} = userDocSnap.data();
 
           let studentsQuery;
           if (['선생님', '버스기사'].includes(userJob)) {
-            const { class: userClass } = userDocSnap.data();
+            const {class: userClass} = userDocSnap.data();
             studentsQuery = query(
               collection(firestore, 'users'),
               where('job', '==', '학생'),
@@ -42,7 +43,7 @@ export default function StudentList() {
           } else if (userJob === '학부모') {
             studentsQuery = query(
               collection(firestore, 'users'),
-              where('job', '==', '학생')
+              where('job', '==', '학생'),
             );
           } else {
             console.log('User is not authorized to view student list.');
@@ -53,14 +54,16 @@ export default function StudentList() {
           if (querySnapshot.docs.length === 0) {
             console.log('No students found.');
           } else {
-            const userList = querySnapshot.docs.map(userDoc => {
-              const userData = userDoc.data();
-              console.log(`Student's email: ${userData.email}`);
-              if (userJob === '학부모' && userData.parent !== userEmail) {
-                return null;
-              }
-              return { id: userDoc.id, ...userData };
-            }).filter(Boolean);
+            const userList = querySnapshot.docs
+              .map(userDoc => {
+                const userData = userDoc.data();
+                console.log(`Student's email: ${userData.email}`);
+                if (userJob === '학부모' && userData.parent !== userEmail) {
+                  return null;
+                }
+                return {id: userDoc.id, ...userData};
+              })
+              .filter(Boolean);
             setStudents(userList);
           }
         } else {
