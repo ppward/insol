@@ -4,7 +4,6 @@ import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import StackNav from './navigator/StackNav';
 import TabNav from './navigator/TabNav';
-
 export default function App() {
   return <StackNav />;
 }
