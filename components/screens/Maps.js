@@ -49,13 +49,7 @@ const updateLocationInFirebase = async (latitude, longitude) => {
 
     await setDoc(
       userLocationRef,
-      {
-        location: {
-          latitude,
-          longitude,
-          timestamp: new Date().toISOString(),
-        },
-      },
+      {location: {latitude, longitude, timestamp: new Date().toISOString()}},
       {merge: true},
     );
 
@@ -133,7 +127,7 @@ export default function Maps() {
 
     // fetchUserJob();
     const job = getDocumentData().job;
-    console.log('맵 컴포넌트에서 데이터:', job);
+    console.log('맵 컴포넌트에서 데이터1:', job);
     setJobInfo(jobDetails[job]);
     requestLocationPermission();
 
