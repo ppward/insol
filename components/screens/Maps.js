@@ -13,7 +13,7 @@ import MapView, {Marker, PROVIDER_GOOGLE} from 'react-native-maps';
 import Geolocation from '@react-native-community/geolocation';
 import { auth, firestore } from '../Firebase';
 import { doc, getDoc, setDoc, collection, query, where, onSnapshot, getDocs } from 'firebase/firestore';
-
+import { check, request, PERMISSIONS, RESULTS } from 'react-native-permissions';
 const jobDetails = {
   선생님: {
     image: require('../../image/선생님.png'),
@@ -62,21 +62,33 @@ export default function Maps() {
   const [filteredUsers, setFilteredUsers] = useState([]);
   const mapRef = useRef(null);
   useEffect(() => {
-    
     const requestLocationPermission = async () => {
+      let granted;
       if (Platform.OS === 'ios') {
-        // iOS 권한 요청 코드
+        // iOS 위치 권한 상태 확인
+        const status = await check(PERMISSIONS.IOS.LOCATION_WHEN_IN_USE);
+        if (status === RESULTS.DENIED) {
+          // 권한 요청
+          granted = await request(PERMISSIONS.IOS.LOCATION_WHEN_IN_USE);
+        } else if (status === RESULTS.GRANTED) {
+          granted = RESULTS.GRANTED;
+        }
       } else if (Platform.OS === 'android') {
-        const response = await PermissionsAndroid.request(
+        // Android 위치 권한 요청
+        granted = await PermissionsAndroid.request(
           PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
         );
-        if (response !== PermissionsAndroid.RESULTS.GRANTED) {
-          console.error('Location permission denied');
-          return;
-        }
       }
-
-      // 위치 가져오기
+  
+      if (granted === PermissionsAndroid.RESULTS.GRANTED || granted === RESULTS.GRANTED) {
+        // 위치 정보 가져오기
+        getCurrentLocation();
+      } else {
+        console.error('Location permission denied');
+      }
+    };
+  
+    const getCurrentLocation = () => {
       Geolocation.getCurrentPosition(
         position => {
           const {latitude, longitude} = position.coords;
@@ -90,18 +102,19 @@ export default function Maps() {
           updateLocationInFirebase(latitude, longitude);
         },
         error => {
-          console.error(error);
+          console.error('Error getting location:', error);
         },
         {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000},
       );
     };
-
+  
+    requestLocationPermission();
     const fetchUserJob = async () => {
       try {
         const uid = auth.currentUser.uid;
         const userDocRef = doc(firestore, 'users', uid);
         const userDocSnap = await getDoc(userDocRef);
-
+  
         if (userDocSnap.exists()) {
           const job = userDocSnap.data().job;
           setJobInfo(jobDetails[job]);
@@ -112,25 +125,75 @@ export default function Maps() {
         console.error("Error fetching user's job:", error);
       }
     };
-    requestLocationPermission();
+  
+    // 특정 조건에 따라 필터링된 사용자 목록을 가져오는 함수
+    const fetchFilteredUsers = async () => {
+      try {
+        const uid = auth.currentUser.uid;
+        const userDocRef = doc(firestore, 'users', uid);
+        const userDocSnap = await getDoc(userDocRef);
+  
+        if (userDocSnap.exists()) {
+          const { job: userJob, email: userEmail, class: userClass } = userDocSnap.data();
+          let usersQuery;
+  
+          if (['선생님', '버스기사'].includes(userJob)) {
+            usersQuery = query(
+              collection(firestore, 'users'),
+              where('job', '==', '학생'),
+              where('class', '==', userClass),
+            );
+          } else if (userJob === '학부모') {
+            // 자녀(학생) 조회
+            const studentsQuery = query(
+              collection(firestore, 'users'),
+              where('parent', '==', userEmail),
+              where('job', '==', '학생')
+            );
+            const studentsSnapshot = await getDocs(studentsQuery);
+            const childrenClasses = studentsSnapshot.docs.map(doc => doc.data().class);
+
+            // 해당 반의 선생님 조회
+            const teachersQuery = query(
+              collection(firestore, 'users'),
+              where('class', 'in', childrenClasses),
+              where('job', '==', '선생님')
+            );
+            const teachersSnapshot = await getDocs(teachersQuery);
+            const teachersData = teachersSnapshot.docs.map(doc => ({
+              id: doc.id,
+              ...doc.data(),
+            }));
+
+            // 자녀와 선생님 정보를 상태에 저장
+            setFilteredUsers([...studentsSnapshot.docs.map(doc => doc.data()), ...teachersData]);
+          } else if (userJob === '학생') {
+            usersQuery = query(
+              collection(firestore, 'users'),
+              where('job', '==', '선생님'),
+              where('class', '==', userClass),
+            );
+          } else {
+            return;
+          }
+  
+          if (usersQuery) {
+            const unsubscribe = onSnapshot(usersQuery, (querySnapshot) => {
+              const usersData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+              setFilteredUsers(usersData);
+            });
+  
+            return () => unsubscribe();
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching filtered users:', error);
+      }
+    };
+  
     fetchUserJob();
-
-    const intervalId = setInterval(() => {
-      Geolocation.getCurrentPosition(
-        position => {
-          const {latitude, longitude} = position.coords;
-          updateLocationInFirebase(latitude, longitude);
-        },
-        error => {
-          console.error(error);
-        },
-        { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
-      );
-    }, 600000);
-
-    return () => clearInterval(intervalId);
+    fetchFilteredUsers();
   }, []);
-
   useEffect(() => {
     const fetchFilteredUsers = async () => {
       try {
