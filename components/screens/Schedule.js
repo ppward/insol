@@ -1,4 +1,4 @@
-import {useState} from 'react';
+import {useEffect, useState} from 'react';
 import {
   View,
   Text,
@@ -14,78 +14,199 @@ import {
 import MapView, {PROVIDER_GOOGLE} from 'react-native-maps';
 import {Calendar} from 'react-native-calendars';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
-
+const API_KEY = 'AIzaSyC3k7HBbhN327lvM3fyx006TZ3bHcYS9KY';
 const itWidth = Dimensions.get('window').width;
 
 export default function Schedule() {
   const [selected, setSelected] = useState('');
   const [schedules, setSchedules] = useState([]);
-  const [when, setWhen] = useState('');
-  const [where, setWhere] = useState('');
-  const [what, setWhat] = useState('');
+
+  const [address, setAddress] = useState('');
+  const [description, setDescription] = useState('');
+  const [coord, setCoord] = useState({
+    latitude: 36.7991,
+    longitude: 127.0748,
+    latitudeDelta: 0.005,
+    longitudeDelta: 0.005,
+  });
   const [modelState, setModalState] = useState(false);
-  const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
-  const [timeSet, setTimeSet] = useState('');
 
-  const showDatePicker = () => {
-    setDatePickerVisibility(true);
+  const [isStartTimePickerVisible, setStartTimePickerVisibility] =
+    useState(false);
+  const [isEndTimePickerVisible, setEndTimePickerVisibility] = useState(false);
+  const [startTime, setStartTime] = useState('');
+  const [endTime, setEndTime] = useState('');
+
+  const showStartTimePicker = () => {
+    setStartTimePickerVisibility(true);
   };
 
-  const hideDatePicker = () => {
-    setDatePickerVisibility(false);
+  // 종료시간 선택기를 보여주는 함수
+  const showEndTimePicker = () => {
+    setEndTimePickerVisibility(true);
   };
-  const handleConfirm = date => {
-    const kstDate = new Date(date.getTime());
-    const formattedTime = new Intl.DateTimeFormat('ko-KR', {
+
+  // 시작시간 선택기를 숨기는 함수
+  const hideStartTimePicker = () => {
+    setStartTimePickerVisibility(false);
+  };
+
+  // 종료시간 선택기를 숨기는 함수
+  const hideEndTimePicker = () => {
+    setEndTimePickerVisibility(false);
+  };
+  // 시작시간을 설정하는 함수
+  const handleStartConfirm = date => {
+    const formattedTime = formatTime(date); // 시간 형식을 설정하는 함수
+    setStartTime(formattedTime);
+    hideStartTimePicker();
+  };
+
+  // 종료시간을 설정하는 함수
+  const handleEndConfirm = date => {
+    const formattedTime = formatTime(date); // 시간 형식을 설정하는 함수
+    setEndTime(formattedTime);
+    hideEndTimePicker();
+  };
+  // 시간 형식을 설정하는 함수
+  const formatTime = date => {
+    return new Intl.DateTimeFormat('ko-KR', {
       hour: '2-digit',
       minute: '2-digit',
-      hour12: true, // or true for 12-hour format
-    }).format(kstDate);
-    setTimeSet(formattedTime);
-    console.log('A date has been picked: ', date);
-    hideDatePicker();
+      hour12: true,
+    }).format(date);
+  };
+  /// place api 자동완성 코드
+
+  const [predictions, setPredictions] = useState([]);
+  const country = 'KR';
+  const [autocompleteVisible, setAutocompleteVisible] = useState(false);
+  const handlePredictionPress = predict => {
+    setAddress(predict);
+  };
+  const handleQueryChange = async value => {
+    //아직 해야함.
+    setAddress(value);
+    try {
+      const response = await fetch(
+        `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(
+          value,
+        )}&key=${API_KEY}&components=country:${country}`,
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.predictions) {
+          const topPredictions = data.predictions.slice(0, 4);
+          console.log(topPredictions);
+          setPredictions(topPredictions);
+        } else {
+          setPredictions([]);
+        }
+      } else {
+        setPredictions([]);
+      }
+    } catch (error) {
+      setPredictions([]);
+    }
+  };
+  const renderPrediction = ({item}) => {
+    return (
+      <TouchableOpacity
+        style={{
+          margin: 1,
+
+          height: 30,
+          justifyContent: 'center',
+        }}
+        onPress={() => handlePredictionPress(item.description)}>
+        <Text>{item.description}</Text>
+      </TouchableOpacity>
+    );
+  };
+  const geocodeAddress = async address => {
+    try {
+      const response = await fetch(
+        `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
+          address,
+        )}&key=${API_KEY}`,
+      );
+      const data = await response.json();
+      if (data.status === 'OK') {
+        const {lat, lng} = data.results[0].geometry.location;
+        return {latitude: lat, longitude: lng};
+      } else if (data.status === 'ZERO_RESULTS') {
+        console.log('No results found for the specified address.');
+        return null;
+      } else {
+        console.log(`Geocoding failed with status: ${data.status}`);
+        return null;
+      }
+    } catch (error) {
+      console.error('Geocoding error:', error);
+      return null;
+    }
   };
 
-  const addSchedule = (when, where, what) => {
-    setSchedules([
-      ...schedules,
-      {when, where, what, id: Math.random().toString()},
+  const handleSearch = async () => {
+    if (address.trim() === '') {
+      console.log('Please enter a valid address');
+      return;
+    }
+
+    const coordinates = await geocodeAddress(address);
+    if (coordinates) {
+      setCoord(prevCoord => ({
+        ...prevCoord,
+        latitude: coordinates.latitude,
+        longitude: coordinates.longitude,
+      }));
+      console.log('Coordinates:', coordinates);
+    } else {
+      console.log('Failed to geocode address. Please try again.');
+    }
+  };
+  const addSchedule = (date, address, startTime, endTime, description) => {
+    setSchedules(prevSchedules => [
+      ...prevSchedules,
+      {
+        date,
+        address,
+        startTime,
+        endTime,
+        description,
+        id: Math.random().toString(),
+      },
     ]);
   };
-  const renderSchedule = ({item}) => (
-    <View
-      style={{
-        width: itWidth * 0,
-        height: 80,
-        borderRadius: 15,
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: 'lightgrey',
-      }}>
-      <Text>{item.when}</Text>
-      <Text>{item.where}</Text>
-      <Text>{item.what}</Text>
-    </View>
-  );
-
-  const renderModal = () => {
-    <Modal>
-      <View>
-        <TextInput placeholder="언제" value={when} onChangeText={setWhen} />
-        <TextInput
-          placeholder="어디에서"
-          value={where}
-          onChangeText={setWhere}
-        />
-        <TextInput placeholder="무엇을" value={what} onChangeText={setWhat} />
-        <Button
-          title="일정 추가"
-          onPress={() => addSchedule(when, where, what)}
-        />
-      </View>
-    </Modal>;
+  // TextInput에 포커스가 있을 때 자동완성 활성화
+  const handleFocus = () => {
+    setAutocompleteVisible(true);
   };
-
+  useEffect(() => {
+    console.log(schedules);
+  }, [schedules]);
+  // TextInput에서 포커스를 잃었을 때 자동완성 비활성화
+  const handleBlur = () => {
+    setAutocompleteVisible(false);
+  };
+  const renderSchedule = ({ item }) => {
+    // Check if 'item' is not null or undefined.
+    if (!item) {
+      return null; // or return a placeholder component
+    }
+  
+    // Return the component that formats the schedule information.
+    return (
+      <View >
+        <Text>날짜 {item.date}</Text>
+        <Text>시간 {item.startTime}~{item.endTime}</Text>
+        
+        <Text>장소 {item.address}</Text>
+        <Text>활동내용 {item.description}</Text>
+      </View>
+    );
+  };
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.headerContainer}>
@@ -115,23 +236,17 @@ export default function Schedule() {
           borderRadius: 15,
           alignItems: 'center',
           justifyContent: 'center',
-          backgroundColor: 'lightgrey',
+          backgroundColor:"#fff",
+          flex:1
         }}>
-        <FlatList
-          data={schedules}
-          renderItem={renderSchedule}
-          keyExtractor={item => item.id}
-        />
+        {schedules.length !== 0 && (
+          <FlatList
+            data={schedules}
+            renderItem={renderSchedule}
+            keyExtractor={item => item.id}
+          />
+        )}
       </View>
-      <View
-        style={{
-          width: itWidth * 0,
-          height: 80,
-          borderRadius: 15,
-          alignItems: 'center',
-          justifyContent: 'center',
-          backgroundColor: 'lightgrey',
-        }}></View>
 
       {/* 모달 창 시작 */}
       <Modal visible={modelState}>
@@ -156,11 +271,37 @@ export default function Schedule() {
               <TextInput
                 style={{marginLeft: 15}}
                 placeholder="장소를 입력해주세요."
-                value={where}
-                onChangeText={setWhere}
+                value={address}
+                onChangeText={handleQueryChange}
+                returnKeyType="search"
+                onSubmitEditing={() => handleSearch()}
+                onFocus={handleFocus}
+                onBlur={handleBlur}
               />
             </View>
           </View>
+          {autocompleteVisible && address !== '' && (
+            <View
+              style={{
+                position: 'absolute',
+                width: '90%',
+
+                height: 100,
+                alignSelf: 'center',
+                alignItems: 'center',
+                top: 310,
+                zIndex: 1,
+                borderRadius: 10,
+                backgroundColor: '#FFF',
+              }}>
+              <FlatList
+                data={predictions}
+                renderItem={renderPrediction}
+                keyExtractor={item => item.place_id}
+                style={styles.predictionsList}
+              />
+            </View>
+          )}
           <View
             style={{
               margin: 10,
@@ -178,36 +319,79 @@ export default function Schedule() {
                 longitude: 127.102,
                 latitudeDelta: 0.005,
                 longitudeDelta: 0.005,
-              }}></MapView>
+              }}
+              region={coord}></MapView>
           </View>
           <View style={{flexDirection: 'row'}}>
             <View style={{...styles.modalItemName, marginTop: 10}}>
               <Text style={styles.modalItemText}>시간</Text>
             </View>
             <TouchableOpacity
-              style={{...styles.modalItemInput, marginTop: 10}}
+              style={{
+                justifyContent: 'center',
+                marginLeft: 15,
+                backgroundColor: '#fff',
+                width: 120,
+                borderRadius: 10,
+                marginTop: 10,
+              }}
               onPress={() => {
-                showDatePicker();
+                showStartTimePicker();
               }}>
               <View style={{alignItems: 'center'}}>
-                {timeSet !== '' ? (
-                  <Text>{timeSet}</Text>
+                {startTime == '' ? (
+                  <Text>시작시간</Text>
                 ) : (
-                  <Text>시간선택</Text>
+                  <Text>{startTime}</Text>
                 )}
+              </View>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={{
+                justifyContent: 'center',
+                marginLeft: 5,
+                backgroundColor: '#fff',
+                width: 120,
+                borderRadius: 10,
+                marginTop: 10,
+              }}
+              onPress={() => {
+                showEndTimePicker();
+              }}>
+              <View style={{alignItems: 'center'}}>
+                {endTime == '' ? <Text>종료시간</Text> : <Text>{endTime}</Text>}
               </View>
             </TouchableOpacity>
           </View>
           <View style={{flexDirection: 'row'}}>
-            <View style={{...styles.modalItemName, marginTop: 10}}>
+            <View
+              style={{
+                marginLeft: 20,
+                width: 90,
+                height: 150,
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: '#8C7FE1',
+                borderRadius: 15,
+                marginTop: 10,
+              }}>
               <Text style={styles.modalItemText}>내용</Text>
             </View>
-            <View style={{...styles.modalItemInput, marginTop: 10}}>
+            <View
+              style={{
+                justifyContent: 'center',
+                marginLeft: 15,
+                backgroundColor: '#fff',
+                width: 245,
+                height: 150,
+                borderRadius: 10,
+                marginTop: 10,
+              }}>
               <TextInput
                 style={{marginLeft: 15}}
                 placeholder="일정 내용을 입력해주세요."
-                value={what}
-                onChangeText={setWhat}
+                value={description}
+                onChangeText={setDescription}
               />
             </View>
           </View>
@@ -215,19 +399,30 @@ export default function Schedule() {
           <Button
             title="일정 추가"
             onPress={() => {
-              //addSchedule(when, where, what)
+              addSchedule(selected, address, startTime, endTime, description);
               setModalState(false);
               console.log('날짜: ', selected);
             }}
           />
         </SafeAreaView>
+
         <DateTimePickerModal
+          isVisible={isStartTimePickerVisible}
           mode="time"
-          locale="en_GB" // Use "en_GB" here
+          locale="en_GB"
           date={new Date()}
-          isVisible={isDatePickerVisible}
-          onConfirm={handleConfirm}
-          onCancel={hideDatePicker}
+          onConfirm={handleStartConfirm}
+          onCancel={hideStartTimePicker}
+        />
+
+        {/* 종료시간 선택기 */}
+        <DateTimePickerModal
+          isVisible={isEndTimePickerVisible}
+          mode="time"
+          locale="en_GB"
+          date={new Date()}
+          onConfirm={handleEndConfirm}
+          onCancel={hideEndTimePicker}
         />
       </Modal>
     </SafeAreaView>
@@ -253,7 +448,7 @@ const styles = StyleSheet.create({
   },
   calendarContainer: {
     width: itWidth * 0.8,
-    height: 290,
+    height: 330,
     marginTop: 30,
     borderRadius: 15,
     overflow: 'hidden',

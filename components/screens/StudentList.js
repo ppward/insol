@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,7 @@ import {
   Image,
   TouchableOpacity,
 } from 'react-native';
-import { auth, firestore } from '../Firebase';
+import {auth, firestore} from '../Firebase';
 import {
   collection,
   query,
@@ -18,11 +18,9 @@ import {
   getDoc,
   updateDoc,
 } from 'firebase/firestore';
-import { CheckBox } from '@rneui/themed';
-import { PermissionsAndroid, Platform } from 'react-native';
+import {CheckBox} from '@rneui/themed';
+import {PermissionsAndroid, Platform} from 'react-native';
 import Geolocation from '@react-native-community/geolocation';
-
-
 
 export default function StudentList() {
   const [students, setStudents] = useState([]);
@@ -57,17 +55,17 @@ export default function StudentList() {
 
     return new Promise((resolve, reject) => {
       Geolocation.getCurrentPosition(
-        (position) => {
+        position => {
           resolve({
             latitude: position.coords.latitude,
             longitude: position.coords.longitude,
           });
         },
-        (error) => {
+        error => {
           console.error('Error getting current location:', error);
           reject(null);
         },
-        { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 },
+        {enableHighAccuracy: true, timeout: 20000, maximumAge: 1000},
       );
     });
   };
@@ -79,13 +77,18 @@ export default function StudentList() {
         const userDocSnap = await getDoc(userDocRef);
 
         if (userDocSnap.exists()) {
-          const { job: userJob, email: userEmail, class: userClass, name: userName } = userDocSnap.data();
+          const {
+            job: userJob,
+            email: userEmail,
+            class: userClass,
+            name: userName,
+          } = userDocSnap.data();
           let studentsQuery;
           if (['선생님', '버스기사'].includes(userJob)) {
             if (userJob === '선생님') {
               setTeacherName(userName);
             }
-            const { class: userClass } = userDocSnap.data();
+            const {class: userClass} = userDocSnap.data();
             setUserClass(userClass);
             studentsQuery = query(
               collection(firestore, 'users'),
@@ -114,7 +117,8 @@ export default function StudentList() {
             for (const docSnapshot of querySnapshot.docs) {
               const studentData = docSnapshot.data();
               const studentId = docSnapshot.id;
-              const lastCheckedDate = studentData.attendance?.timestamp?.split('T')[0];
+              const lastCheckedDate =
+                studentData.attendance?.timestamp?.split('T')[0];
               let isChecked = studentData.attendance?.checked || false;
 
               if (lastCheckedDate && lastCheckedDate !== currentDate) {
@@ -125,7 +129,11 @@ export default function StudentList() {
                 });
               }
 
-              fetchedStudents.push({ id: studentId, ...studentData, checked: isChecked });
+              fetchedStudents.push({
+                id: studentId,
+                ...studentData,
+                checked: isChecked,
+              });
               fetchedCheckedIds[studentId] = isChecked;
             }
 
@@ -143,15 +151,14 @@ export default function StudentList() {
     fetchStudents();
   }, []);
 
-
   const handleAttendance = async () => {
     const userLocation = await getCurrentUserLocation();
     if (!userLocation) return;
 
     // 새로운 출석 상태를 위한 객체를 생성합니다.
-    const newCheckedIds = { ...checkedIds };
+    const newCheckedIds = {...checkedIds};
 
-    students.forEach(async (student) => {
+    students.forEach(async student => {
       const isClose = await checkProximity(userLocation, student.location);
       if (isClose) {
         newCheckedIds[student.id] = true; // 출석 상태를 true로 설정합니다.
@@ -167,11 +174,15 @@ export default function StudentList() {
     setCheckedIds(newCheckedIds); // 상태를 업데이트합니다.
   };
 
-
   const checkProximity = (userLocation, studentLocation) => {
-    const { latitude: userLat, longitude: userLng } = userLocation;
-    const { latitude: studentLat, longitude: studentLng } = studentLocation;
-    const distance = getDistanceFromLatLonInKm(userLat, userLng, studentLat, studentLng);
+    const {latitude: userLat, longitude: userLng} = userLocation;
+    const {latitude: studentLat, longitude: studentLng} = studentLocation;
+    const distance = getDistanceFromLatLonInKm(
+      userLat,
+      userLng,
+      studentLat,
+      studentLng,
+    );
     return distance < 0.5;
   };
   const getDistanceFromLatLonInKm = (lat1, lon1, lat2, lon2) => {
@@ -180,26 +191,26 @@ export default function StudentList() {
     const dLon = deg2rad(lon2 - lon1);
     const a =
       Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
-      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      Math.cos(deg2rad(lat1)) *
+        Math.cos(deg2rad(lat2)) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     const distance = R * c;
     return distance;
   };
 
-  const deg2rad = (deg) => {
+  const deg2rad = deg => {
     return deg * (Math.PI / 180);
   };
 
-  const renderItem = ({ item }) => (
+  const renderItem = ({item}) => (
     <View style={styles.itemContainer}>
       <Image
-        style={{ width: 67, height: 67 }}
+        style={{width: 67, height: 67}}
         source={require('../../image/학생.png')}
       />
-      <Text style={styles.itemText}>
-        {item.name}
-      </Text>
+      <Text style={styles.itemText}>{item.name}</Text>
       <CheckBox
         checked={!!checkedIds[item.id]}
         disabled={true} // 체크박스를 비활성화합니다.
@@ -218,14 +229,20 @@ export default function StudentList() {
           source={require('../../image/선생님.png')}
         />
         <View style={styles.userInfoContainer}>
-          <Text style={styles.profileName}>{teacherName || '선생님 이름'}</Text>
-          <View style={styles.classInfoContainer}>
+          <View style={{flexDirection: 'row'}}>
+            <Text style={styles.profileName}>
+              {teacherName || '선생님 이름'}
+            </Text>
+            <Text style={styles.profileName}> 선생님</Text>
+          </View>
+
+          <View style={{...styles.classInfoContainer, flexDirection: 'row'}}>
             <Text style={styles.classInfoText}>{userClass}</Text>
+            <Text> 반</Text>
           </View>
           <TouchableOpacity
             style={styles.attendanceButton}
-            onPress={handleAttendance}
-          >
+            onPress={handleAttendance}>
             <Text style={styles.attendanceButtonText}>출석</Text>
           </TouchableOpacity>
         </View>
@@ -233,10 +250,9 @@ export default function StudentList() {
       <FlatList
         data={students}
         renderItem={renderItem}
-        keyExtractor={(item) => item.id}
+        keyExtractor={item => item.id}
       />
     </SafeAreaView>
-
   );
 }
 
@@ -265,6 +281,7 @@ const styles = StyleSheet.create({
   userInfoContainer: {
     flex: 1,
     alignItems: 'flex-end',
+    marginRight: 15,
     justifyContent: 'center',
   },
   profileName: {
@@ -278,7 +295,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 10,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: {width: 0, height: 1},
     shadowOpacity: 0.22,
     shadowRadius: 2.22,
     elevation: 3,
@@ -294,7 +311,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 5,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
@@ -314,7 +331,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     borderRadius: 15,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: {width: 0, height: 1},
     shadowOpacity: 0.22,
     shadowRadius: 2.22,
     elevation: 3,

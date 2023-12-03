@@ -22,7 +22,7 @@ import {
   onSnapshot,
   getDocs,
 } from 'firebase/firestore';
-import {getDocumentData} from '../DocumentData';
+
 const jobDetails = {
   선생님: {
     image: require('../../image/선생님.png'),
@@ -49,7 +49,13 @@ const updateLocationInFirebase = async (latitude, longitude) => {
 
     await setDoc(
       userLocationRef,
-      {location: {latitude, longitude, timestamp: new Date().toISOString()}},
+      {
+        location: {
+          latitude,
+          longitude,
+          timestamp: new Date().toISOString(),
+        },
+      },
       {merge: true},
     );
 
@@ -62,25 +68,31 @@ const updateLocationInFirebase = async (latitude, longitude) => {
 export default function Maps() {
   const [jobInfo, setJobInfo] = useState(null);
   const [currentPosition, setCurrentPosition] = useState(null);
+  const [users, setUsers] = useState([]); // 사용자들의 위치 데이터
   const [filteredUsers, setFilteredUsers] = useState([]);
   const mapRef = useRef(null);
+
+  const startBluetoothScan = () => {
+    bleManager.startDeviceScan(null, null, (error, device) => {
+      if (error) {
+        console.log(error);
+        return;
+      }
+
+      console.log('Device found: ', device.name);
+    });
+  };
+
+  const onHeaderButtonPress = () => {
+    console.log('Header Button Pressed');
+    startBluetoothScan();
+  };
+
   useEffect(() => {
-    const getCurrentPosition = () => {
-      return new Promise((resolve, reject) => {
-        Geolocation.getCurrentPosition(
-          position => {
-            resolve(position);
-          },
-          error => {
-            reject(error);
-          },
-          {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000},
-        );
-      });
-    };
+    // 위치 권한 요청
     const requestLocationPermission = async () => {
       if (Platform.OS === 'ios') {
-        // iOS 권한 요청 코드
+        // iOS 권한 요청 로직 (필요한 경우)
       } else if (Platform.OS === 'android') {
         const response = await PermissionsAndroid.request(
           PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
@@ -91,63 +103,63 @@ export default function Maps() {
         }
       }
 
-      // 위치 가져오기
-      try {
-        const position = await getCurrentPosition();
-        const {latitude, longitude} = position.coords;
-        setCurrentPosition({
-          latitude,
-          longitude,
-          latitudeDelta: 0.005,
-          longitudeDelta: 0.005,
-        });
-        // Firebase에 위치 업데이트
-        await updateLocationInFirebase(latitude, longitude);
-      } catch (error) {
-        console.error(error);
-      }
-    };
-
-    // const fetchUserJob = async () => {
-    //   try {
-    //     const uid = auth.currentUser.uid;
-    //     const userDocRef = doc(firestore, 'users', uid);
-    //     getDoc(userDocRef).then(docSnapshot => {
-    //       if (docSnapshot.exists()) {
-    //         const userData = docSnapshot.data();
-    //         console.log(userData);
-    //         console.log('데이터', userData.job);
-    //         //setJobInfo(userData.job);
-    //       }
-    //     });
-    //   } catch (error) {
-    //     console.error("Error fetching user's job:", error);
-    //   }
-    // };
-
-    // fetchUserJob();
-    const job = getDocumentData().job;
-    console.log('맵 컴포넌트에서 데이터1:', job);
-    setJobInfo(jobDetails[job]);
-    requestLocationPermission();
-
-    const intervalId = setInterval(() => {
       Geolocation.getCurrentPosition(
         position => {
           const {latitude, longitude} = position.coords;
-          updateLocationInFirebase(latitude, longitude);
+          setCurrentPosition({
+            latitude,
+            longitude,
+            latitudeDelta: 0.005,
+            longitudeDelta: 0.005,
+          });
         },
         error => {
           console.error(error);
         },
         {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000},
       );
-    }, 600000);
+    };
+    const updateCurrentLocation = () => {
+      Geolocation.getCurrentPosition(
+        position => {
+          const {latitude, longitude} = position.coords;
+          updateLocationInFirebase(latitude, longitude);
+        },
+        error => {
+          console.error('Location update error:', error);
+        },
+        {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000},
+      );
+    };
+    // 사용자 직업 정보 가져오기
+    const fetchUserJob = async () => {
+      try {
+        const uid = auth.currentUser.uid;
+        const userDocRef = doc(firestore, 'users', uid);
+        const userDocSnap = await getDoc(userDocRef);
 
-    return () => clearInterval(intervalId);
-  }, []);
+        if (userDocSnap.exists()) {
+          const job = userDocSnap.data().job;
+          setJobInfo(jobDetails[job]);
+        } else {
+          console.error('No such document!');
+        }
+      } catch (error) {
+        console.error("Error fetching user's job:", error);
+      }
+    };
 
-  useEffect(() => {
+    // 모든 사용자의 위치 데이터 가져오기
+    const fetchUsersLocation = async () => {
+      const querySnapshot = await getDocs(collection(firestore, 'users'));
+      const usersData = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setUsers(usersData);
+    };
+
+    // 필터링된 사용자 위치 데이터 가져오기
     const fetchFilteredUsers = async () => {
       try {
         const uid = auth.currentUser.uid;
@@ -160,8 +172,8 @@ export default function Maps() {
             email: userEmail,
             class: userClass,
           } = userDocSnap.data();
-
           let usersQuery;
+
           if (['선생님', '버스기사'].includes(userJob)) {
             usersQuery = query(
               collection(firestore, 'users'),
@@ -216,7 +228,7 @@ export default function Maps() {
               setFilteredUsers(usersData);
             });
 
-            return unsubscribe;
+            return () => unsubscribe();
           }
         }
       } catch (error) {
@@ -224,7 +236,32 @@ export default function Maps() {
       }
     };
 
+    // 실시간 위치 업데이트 리스너 설정
+    const subscribeToLocationUpdates = () => {
+      const usersRef = collection(firestore, 'users');
+      const unsubscribe = onSnapshot(usersRef, querySnapshot => {
+        const updatedUsers = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setFilteredUsers(updatedUsers);
+      });
+
+      return unsubscribe;
+    };
+    const locationUpdateInterval = setInterval(updateCurrentLocation, 30000); // 600000ms = 10분
+    requestLocationPermission();
+    fetchUserJob();
+    fetchUsersLocation();
     fetchFilteredUsers();
+    const locationUpdateUnsubscribe = subscribeToLocationUpdates();
+
+    // 컴포넌트 언마운트 시 실행될 코드
+    return () => {
+      clearInterval(locationUpdateInterval);
+      locationUpdateUnsubscribe();
+      // 여기에 필요한 경우 다른 정리 작업을 추가할 수 있습니다.
+    };
   }, []);
 
   if (!jobInfo || !currentPosition) {
@@ -242,6 +279,11 @@ export default function Maps() {
           <Image source={jobInfo.image} style={styles.profilePic} />
           <Text style={styles.headerText}>{jobInfo.text}</Text>
         </View>
+        <TouchableOpacity
+          style={styles.headerButton}
+          onPress={onHeaderButtonPress}>
+          <Text style={styles.headerButtonText}>버튼</Text>
+        </TouchableOpacity>
       </View>
       <View style={styles.mapContainer}>
         <MapView
@@ -250,35 +292,20 @@ export default function Maps() {
           provider={PROVIDER_GOOGLE}
           initialRegion={currentPosition}
           showsUserLocation={true}>
-          {filteredUsers.map((user, index) => {
-            if (user.location) {
-              const key = user.id ? user.id.toString() : `user-${index}`;
-              return (
+          {filteredUsers.map(
+            user =>
+              user.location && (
                 <Marker
-                  key={key}
+                  key={user.id}
                   coordinate={{
                     latitude: user.location.latitude,
                     longitude: user.location.longitude,
                   }}
                   title={user.name || 'Unknown'}
                 />
-              );
-            }
-            return null;
-          })}
+              ),
+          )}
         </MapView>
-        {currentPosition && (
-          <TouchableOpacity
-            style={styles.button}
-            onPress={() => {
-              mapRef.current.animateToRegion(currentPosition, 1000);
-            }}>
-            <Image
-              style={{width: 28, height: 28, tintColor: '#fff'}}
-              source={require('../../assets/target.png')}
-            />
-          </TouchableOpacity>
-        )}
       </View>
     </SafeAreaView>
   );
@@ -296,6 +323,16 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     paddingHorizontal: 40,
     width: '100%',
+  },
+  headerButton: {
+    backgroundColor: '#4E9F3D',
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: 5,
+  },
+  headerButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
   },
   profileContainer: {
     flexDirection: 'row',
@@ -341,5 +378,9 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     shadowColor: 'black',
     shadowOffset: {height: 3, width: 3},
+  },
+  buttonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
   },
 });
