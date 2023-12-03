@@ -1,12 +1,12 @@
-import React, {useEffect, useState} from 'react';
-import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
-import {Image} from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { Image } from 'react-native';
 import Maps from '../components/screens/Maps';
 import Schedule from '../components/screens/Schedule';
 import StudentList from '../components/screens/StudentList';
-import {getAuth, onAuthStateChanged} from 'firebase/auth';
-import {getFirestore, doc, getDoc} from 'firebase/firestore';
-import {setDocumentData, getDocumentData} from '../components/DocumentData';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { getFirestore, doc, getDoc } from 'firebase/firestore';
+
 const Tab = createBottomTabNavigator();
 
 export default function TabNav() {
@@ -20,11 +20,9 @@ export default function TabNav() {
       if (user) {
         // 사용자가 로그인한 경우, 사용자의 'job' 정보를 가져옴
         const userDocRef = doc(firestore, 'users', user.uid);
-        getDoc(userDocRef).then(docSnapshot => {
+        getDoc(userDocRef).then((docSnapshot) => {
           if (docSnapshot.exists()) {
             const userData = docSnapshot.data();
-            setDocumentData(userData);
-            console.log('데이터 확인', getDocumentData());
             setUserRole(userData.job); // 가져온 'job' 값을 userRole 상태에 저장
           }
         });
@@ -39,8 +37,8 @@ export default function TabNav() {
   }, [auth, firestore]);
 
   return (
-    <Tab.Navigator initialRouteName="Map" screenOptions={{headerShown: false}}>
-      {(userRole === '선생님' || userRole === '버스기사') && (
+    <Tab.Navigator initialRouteName="Map" screenOptions={{ headerShown: false }}>
+      { (userRole === '선생님' || userRole === '버스기사') && (
         // '선생님' 또는 '버스기사' 역할을 가진 사용자만 '학생리스트' 탭을 볼 수 있음
         <Tab.Screen
           name="StudentsList"
@@ -48,14 +46,14 @@ export default function TabNav() {
           options={{
             tabBarIcon: () => (
               <Image
-                style={{width: 30, height: 30}}
+                style={{ width: 30, height: 30 }}
                 source={require('../assets/customer.png')}
               />
             ),
           }}
         />
       )}
-      <Tab.Screen
+       <Tab.Screen
         name="Map"
         component={Maps}
         options={{
