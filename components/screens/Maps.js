@@ -11,9 +11,18 @@ import {
 } from 'react-native';
 import MapView, {Marker, PROVIDER_GOOGLE} from 'react-native-maps';
 import Geolocation from '@react-native-community/geolocation';
-import { auth, firestore } from '../Firebase';
-import { doc, getDoc, setDoc, collection, query, where, onSnapshot, getDocs } from 'firebase/firestore';
-
+import {auth, firestore} from '../Firebase';
+import {
+  doc,
+  getDoc,
+  setDoc,
+  collection,
+  query,
+  where,
+  onSnapshot,
+  getDocs,
+} from 'firebase/firestore';
+import {getDocumentData} from '../DocumentData';
 const jobDetails = {
   선생님: {
     image: require('../../image/선생님.png'),
@@ -62,7 +71,19 @@ export default function Maps() {
   const [filteredUsers, setFilteredUsers] = useState([]);
   const mapRef = useRef(null);
   useEffect(() => {
-    
+    const getCurrentPosition = () => {
+      return new Promise((resolve, reject) => {
+        Geolocation.getCurrentPosition(
+          position => {
+            resolve(position);
+          },
+          error => {
+            reject(error);
+          },
+          {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000},
+        );
+      });
+    };
     const requestLocationPermission = async () => {
       if (Platform.OS === 'ios') {
         // iOS 권한 요청 코드
@@ -77,43 +98,44 @@ export default function Maps() {
       }
 
       // 위치 가져오기
-      Geolocation.getCurrentPosition(
-        position => {
-          const {latitude, longitude} = position.coords;
-          setCurrentPosition({
-            latitude,
-            longitude,
-            latitudeDelta: 0.005,
-            longitudeDelta: 0.005,
-          });
-          // Firebase에 위치 업데이트
-          updateLocationInFirebase(latitude, longitude);
-        },
-        error => {
-          console.error(error);
-        },
-        {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000},
-      );
-    };
-
-    const fetchUserJob = async () => {
       try {
-        const uid = auth.currentUser.uid;
-        const userDocRef = doc(firestore, 'users', uid);
-        const userDocSnap = await getDoc(userDocRef);
-
-        if (userDocSnap.exists()) {
-          const job = userDocSnap.data().job;
-          setJobInfo(jobDetails[job]);
-        } else {
-          console.error('No such document!');
-        }
+        const position = await getCurrentPosition();
+        const {latitude, longitude} = position.coords;
+        setCurrentPosition({
+          latitude,
+          longitude,
+          latitudeDelta: 0.005,
+          longitudeDelta: 0.005,
+        });
+        // Firebase에 위치 업데이트
+        await updateLocationInFirebase(latitude, longitude);
       } catch (error) {
-        console.error("Error fetching user's job:", error);
+        console.error(error);
       }
     };
+
+    // const fetchUserJob = async () => {
+    //   try {
+    //     const uid = auth.currentUser.uid;
+    //     const userDocRef = doc(firestore, 'users', uid);
+    //     getDoc(userDocRef).then(docSnapshot => {
+    //       if (docSnapshot.exists()) {
+    //         const userData = docSnapshot.data();
+    //         console.log(userData);
+    //         console.log('데이터', userData.job);
+    //         //setJobInfo(userData.job);
+    //       }
+    //     });
+    //   } catch (error) {
+    //     console.error("Error fetching user's job:", error);
+    //   }
+    // };
+
+    // fetchUserJob();
+    const job = getDocumentData().job;
+    console.log('맵 컴포넌트에서 데이터:', job);
+    setJobInfo(jobDetails[job]);
     requestLocationPermission();
-    fetchUserJob();
 
     const intervalId = setInterval(() => {
       Geolocation.getCurrentPosition(
@@ -124,7 +146,7 @@ export default function Maps() {
         error => {
           console.error(error);
         },
-        { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+        {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000},
       );
     }, 600000);
 
@@ -157,16 +179,18 @@ export default function Maps() {
             const studentsQuery = query(
               collection(firestore, 'users'),
               where('parent', '==', userEmail),
-              where('job', '==', '학생')
+              where('job', '==', '학생'),
             );
             const studentsSnapshot = await getDocs(studentsQuery);
-            const childrenClasses = studentsSnapshot.docs.map(doc => doc.data().class);
+            const childrenClasses = studentsSnapshot.docs.map(
+              doc => doc.data().class,
+            );
 
             // 해당 반의 선생님 조회
             const teachersQuery = query(
               collection(firestore, 'users'),
               where('class', 'in', childrenClasses),
-              where('job', '==', '선생님')
+              where('job', '==', '선생님'),
             );
             const teachersSnapshot = await getDocs(teachersQuery);
             const teachersData = teachersSnapshot.docs.map(doc => ({
@@ -175,7 +199,10 @@ export default function Maps() {
             }));
 
             // 자녀와 선생님 정보를 상태에 저장
-            setFilteredUsers([...studentsSnapshot.docs.map(doc => doc.data()), ...teachersData]);
+            setFilteredUsers([
+              ...studentsSnapshot.docs.map(doc => doc.data()),
+              ...teachersData,
+            ]);
           } else if (userJob === '학생') {
             usersQuery = query(
               collection(firestore, 'users'),
@@ -187,7 +214,7 @@ export default function Maps() {
           }
 
           if (usersQuery) {
-            const unsubscribe = onSnapshot(usersQuery, (querySnapshot) => {
+            const unsubscribe = onSnapshot(usersQuery, querySnapshot => {
               const usersData = querySnapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data(),
@@ -205,8 +232,6 @@ export default function Maps() {
 
     fetchFilteredUsers();
   }, []);
-
-
 
   if (!jobInfo || !currentPosition) {
     return (
@@ -230,8 +255,7 @@ export default function Maps() {
           style={styles.map}
           provider={PROVIDER_GOOGLE}
           initialRegion={currentPosition}
-          showsUserLocation={true}
-        >
+          showsUserLocation={true}>
           {filteredUsers.map((user, index) => {
             if (user.location) {
               const key = user.id ? user.id.toString() : `user-${index}`;
@@ -256,7 +280,7 @@ export default function Maps() {
               mapRef.current.animateToRegion(currentPosition, 1000);
             }}>
             <Image
-              style={{ width: 28, height: 28, tintColor: '#fff' }}
+              style={{width: 28, height: 28, tintColor: '#fff'}}
               source={require('../../assets/target.png')}
             />
           </TouchableOpacity>
