@@ -12,17 +12,8 @@ import {
 import MapView, {Marker, PROVIDER_GOOGLE} from 'react-native-maps';
 import Geolocation from '@react-native-community/geolocation';
 import {auth, firestore} from '../Firebase';
-import {
-  doc,
-  getDoc,
-  setDoc,
-  collection,
-  query,
-  where,
-  onSnapshot,
-  getDocs,
-} from 'firebase/firestore';
-import {getDocumentData} from '../DocumentData';
+import {doc, getDoc, setDoc, collection, getDocs} from 'firebase/firestore';
+
 const jobDetails = {
   선생님: {
     image: require('../../image/선생님.png'),
@@ -49,7 +40,13 @@ const updateLocationInFirebase = async (latitude, longitude) => {
 
     await setDoc(
       userLocationRef,
-      {location: {latitude, longitude, timestamp: new Date().toISOString()}},
+      {
+        location: {
+          latitude,
+          longitude,
+          timestamp: new Date().toISOString(),
+        },
+      },
       {merge: true},
     );
 
@@ -62,25 +59,29 @@ const updateLocationInFirebase = async (latitude, longitude) => {
 export default function Maps() {
   const [jobInfo, setJobInfo] = useState(null);
   const [currentPosition, setCurrentPosition] = useState(null);
-  const [filteredUsers, setFilteredUsers] = useState([]);
+  const [users, setUsers] = useState([]); // 사용자들의 위치 데이터
   const mapRef = useRef(null);
+
+  const startBluetoothScan = () => {
+    bleManager.startDeviceScan(null, null, (error, device) => {
+      if (error) {
+        console.log(error);
+        return;
+      }
+
+      console.log('Device found: ', device.name);
+    });
+  };
+
+  const onHeaderButtonPress = () => {
+    console.log('Header Button Pressed');
+    startBluetoothScan();
+  };
+
   useEffect(() => {
-    const getCurrentPosition = () => {
-      return new Promise((resolve, reject) => {
-        Geolocation.getCurrentPosition(
-          position => {
-            resolve(position);
-          },
-          error => {
-            reject(error);
-          },
-          {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000},
-        );
-      });
-    };
     const requestLocationPermission = async () => {
       if (Platform.OS === 'ios') {
-        // iOS 권한 요청 코드
+        // iOS 권한 요청 로직 (필요한 경우)
       } else if (Platform.OS === 'android') {
         const response = await PermissionsAndroid.request(
           PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
@@ -91,45 +92,54 @@ export default function Maps() {
         }
       }
 
-      // 위치 가져오기
+      Geolocation.getCurrentPosition(
+        position => {
+          const {latitude, longitude} = position.coords;
+          setCurrentPosition({
+            latitude,
+            longitude,
+            latitudeDelta: 0.005,
+            longitudeDelta: 0.005,
+          });
+        },
+        error => {
+          console.error(error);
+        },
+        {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000},
+      );
+    };
+
+    const fetchUserJob = async () => {
       try {
-        const position = await getCurrentPosition();
-        const {latitude, longitude} = position.coords;
-        setCurrentPosition({
-          latitude,
-          longitude,
-          latitudeDelta: 0.005,
-          longitudeDelta: 0.005,
-        });
-        // Firebase에 위치 업데이트
-        await updateLocationInFirebase(latitude, longitude);
+        const uid = auth.currentUser.uid;
+        const userDocRef = doc(firestore, 'users', uid);
+        const userDocSnap = await getDoc(userDocRef);
+
+        if (userDocSnap.exists()) {
+          const job = userDocSnap.data().job;
+          setJobInfo(jobDetails[job]);
+        } else {
+          console.error('No such document!');
+        }
       } catch (error) {
-        console.error(error);
+        console.error("Error fetching user's job:", error);
       }
     };
 
-    // const fetchUserJob = async () => {
-    //   try {
-    //     const uid = auth.currentUser.uid;
-    //     const userDocRef = doc(firestore, 'users', uid);
-    //     getDoc(userDocRef).then(docSnapshot => {
-    //       if (docSnapshot.exists()) {
-    //         const userData = docSnapshot.data();
-    //         console.log(userData);
-    //         console.log('데이터', userData.job);
-    //         //setJobInfo(userData.job);
-    //       }
-    //     });
-    //   } catch (error) {
-    //     console.error("Error fetching user's job:", error);
-    //   }
-    // };
-
-    // fetchUserJob();
-    const job = getDocumentData().job;
-    console.log('맵 컴포넌트에서 데이터1:', job);
-    setJobInfo(jobDetails[job]);
     requestLocationPermission();
+    fetchUserJob();
+
+    // 사용자들의 위치 데이터 가져오기
+    const fetchUsersLocation = async () => {
+      const querySnapshot = await getDocs(collection(firestore, 'users'));
+      const usersData = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setUsers(usersData);
+    };
+
+    fetchUsersLocation();
 
     const intervalId = setInterval(() => {
       Geolocation.getCurrentPosition(
@@ -142,89 +152,10 @@ export default function Maps() {
         },
         {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000},
       );
-    }, 600000);
+    }, 60000); // 1분마다 실행
 
+    // 컴포넌트 언마운트 시 인터벌 정리
     return () => clearInterval(intervalId);
-  }, []);
-
-  useEffect(() => {
-    const fetchFilteredUsers = async () => {
-      try {
-        const uid = auth.currentUser.uid;
-        const userDocRef = doc(firestore, 'users', uid);
-        const userDocSnap = await getDoc(userDocRef);
-
-        if (userDocSnap.exists()) {
-          const {
-            job: userJob,
-            email: userEmail,
-            class: userClass,
-          } = userDocSnap.data();
-
-          let usersQuery;
-          if (['선생님', '버스기사'].includes(userJob)) {
-            usersQuery = query(
-              collection(firestore, 'users'),
-              where('job', '==', '학생'),
-              where('class', '==', userClass),
-            );
-          } else if (userJob === '학부모') {
-            // 자녀(학생) 조회
-            const studentsQuery = query(
-              collection(firestore, 'users'),
-              where('parent', '==', userEmail),
-              where('job', '==', '학생'),
-            );
-            const studentsSnapshot = await getDocs(studentsQuery);
-            const childrenClasses = studentsSnapshot.docs.map(
-              doc => doc.data().class,
-            );
-
-            // 해당 반의 선생님 조회
-            const teachersQuery = query(
-              collection(firestore, 'users'),
-              where('class', 'in', childrenClasses),
-              where('job', '==', '선생님'),
-            );
-            const teachersSnapshot = await getDocs(teachersQuery);
-            const teachersData = teachersSnapshot.docs.map(doc => ({
-              id: doc.id,
-              ...doc.data(),
-            }));
-
-            // 자녀와 선생님 정보를 상태에 저장
-            setFilteredUsers([
-              ...studentsSnapshot.docs.map(doc => doc.data()),
-              ...teachersData,
-            ]);
-          } else if (userJob === '학생') {
-            usersQuery = query(
-              collection(firestore, 'users'),
-              where('job', '==', '선생님'),
-              where('class', '==', userClass),
-            );
-          } else {
-            return;
-          }
-
-          if (usersQuery) {
-            const unsubscribe = onSnapshot(usersQuery, querySnapshot => {
-              const usersData = querySnapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data(),
-              }));
-              setFilteredUsers(usersData);
-            });
-
-            return unsubscribe;
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching filtered users:', error);
-      }
-    };
-
-    fetchFilteredUsers();
   }, []);
 
   if (!jobInfo || !currentPosition) {
@@ -242,43 +173,33 @@ export default function Maps() {
           <Image source={jobInfo.image} style={styles.profilePic} />
           <Text style={styles.headerText}>{jobInfo.text}</Text>
         </View>
+        <TouchableOpacity
+          style={styles.headerButton}
+          onPress={onHeaderButtonPress}>
+          <Text style={styles.headerButtonText}>버튼</Text>
+        </TouchableOpacity>
       </View>
       <View style={styles.mapContainer}>
         <MapView
           ref={mapRef}
           style={styles.map}
-          provider={PROVIDER_GOOGLE}
+          provider={PROVIDER_GOOGLE} // Use Google Maps on iOS
           initialRegion={currentPosition}
           showsUserLocation={true}>
-          {filteredUsers.map((user, index) => {
-            if (user.location) {
-              const key = user.id ? user.id.toString() : `user-${index}`;
-              return (
+          {users.map(
+            user =>
+              user.location && (
                 <Marker
-                  key={key}
+                  key={user.id}
                   coordinate={{
                     latitude: user.location.latitude,
                     longitude: user.location.longitude,
                   }}
-                  title={user.name || 'Unknown'}
+                  title={user.name || 'Unknown'} // 'name' 필드가 없는 경우 'Unknown' 표시
                 />
-              );
-            }
-            return null;
-          })}
+              ),
+          )}
         </MapView>
-        {currentPosition && (
-          <TouchableOpacity
-            style={styles.button}
-            onPress={() => {
-              mapRef.current.animateToRegion(currentPosition, 1000);
-            }}>
-            <Image
-              style={{width: 28, height: 28, tintColor: '#fff'}}
-              source={require('../../assets/target.png')}
-            />
-          </TouchableOpacity>
-        )}
       </View>
     </SafeAreaView>
   );
@@ -296,6 +217,16 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     paddingHorizontal: 40,
     width: '100%',
+  },
+  headerButton: {
+    backgroundColor: '#4E9F3D',
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: 5,
+  },
+  headerButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
   },
   profileContainer: {
     flexDirection: 'row',
@@ -341,5 +272,9 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     shadowColor: 'black',
     shadowOffset: {height: 3, width: 3},
+  },
+  buttonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
   },
 });
