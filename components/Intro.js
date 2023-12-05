@@ -102,7 +102,7 @@ export default function Intro() {
       </ScrollView>
     );
   }
-
+  
   return (
     <View style={styles.container}>
       <TouchableWithoutFeedback onPress={onOpen}>
