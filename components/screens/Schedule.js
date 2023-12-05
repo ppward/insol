@@ -6,10 +6,7 @@ import {
   SafeAreaView,
   StyleSheet,
   Modal,
-<<<<<<< HEAD
-=======
   Alert,
->>>>>>> 6a5ec255b3e00d339450966d675f64a943bf2955
   Dimensions,
   FlatList,
   TouchableOpacity,
@@ -17,8 +14,6 @@ import {
 import MapView, {PROVIDER_GOOGLE} from 'react-native-maps';
 import {Calendar} from 'react-native-calendars';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
-<<<<<<< HEAD
-=======
 import {auth, firestore} from '../Firebase';
 import {
   doc,
@@ -32,7 +27,6 @@ import {
   deleteDoc,
 } from 'firebase/firestore';
 
->>>>>>> 6a5ec255b3e00d339450966d675f64a943bf2955
 const API_KEY = 'AIzaSyC3k7HBbhN327lvM3fyx006TZ3bHcYS9KY';
 const itWidth = Dimensions.get('window').width;
 
@@ -49,19 +43,13 @@ export default function Schedule() {
     longitudeDelta: 0.005,
   });
   const [modelState, setModalState] = useState(false);
-<<<<<<< HEAD
-
-=======
   const [userData, setUserData] = useState({});
->>>>>>> 6a5ec255b3e00d339450966d675f64a943bf2955
   const [isStartTimePickerVisible, setStartTimePickerVisibility] =
     useState(false);
   const [isEndTimePickerVisible, setEndTimePickerVisibility] = useState(false);
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
 
-<<<<<<< HEAD
-=======
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -111,7 +99,6 @@ export default function Schedule() {
     }
   }, [userData]);
 
->>>>>>> 6a5ec255b3e00d339450966d675f64a943bf2955
   const showStartTimePicker = () => {
     setStartTimePickerVisibility(true);
   };
@@ -190,10 +177,6 @@ export default function Schedule() {
       <TouchableOpacity
         style={{
           margin: 1,
-<<<<<<< HEAD
-
-=======
->>>>>>> 6a5ec255b3e00d339450966d675f64a943bf2955
           height: 30,
           justifyContent: 'center',
         }}
@@ -202,10 +185,6 @@ export default function Schedule() {
       </TouchableOpacity>
     );
   };
-<<<<<<< HEAD
-=======
-
->>>>>>> 6a5ec255b3e00d339450966d675f64a943bf2955
   const geocodeAddress = async address => {
     try {
       const response = await fetch(
@@ -248,20 +227,6 @@ export default function Schedule() {
       console.log('Failed to geocode address. Please try again.');
     }
   };
-<<<<<<< HEAD
-  const addSchedule = (date, address, startTime, endTime, description) => {
-    setSchedules(prevSchedules => [
-      ...prevSchedules,
-      {
-        date,
-        address,
-        startTime,
-        endTime,
-        description,
-        id: Math.random().toString(),
-      },
-    ]);
-=======
   const addSchedule = async (
     date,
     address,
@@ -286,7 +251,6 @@ export default function Schedule() {
     } catch (error) {
       console.error('Error adding schedule to firebase: ', error);
     }
->>>>>>> 6a5ec255b3e00d339450966d675f64a943bf2955
   };
   const markedDates = schedules.reduce((acc, curr) => {
     const dot = {key: 'dot', color: 'blue', selectedDotColor: 'blue'};
@@ -302,9 +266,6 @@ export default function Schedule() {
     }
     return acc;
   }, {});
-<<<<<<< HEAD
-
-=======
   const [edit, setEdit] = useState(false);
   const [editId, setEditId] = useState('');
   const openEditModal = scheduleId => {
@@ -371,7 +332,6 @@ export default function Schedule() {
       console.error('Error removing schedule: ', error);
     }
   };
->>>>>>> 6a5ec255b3e00d339450966d675f64a943bf2955
   // TextInput에 포커스가 있을 때 자동완성 활성화
   const handleFocus = () => {
     setAutocompleteVisible(true);
@@ -388,38 +348,6 @@ export default function Schedule() {
     if (!item) {
       return null; // or return a placeholder component
     }
-<<<<<<< HEAD
-
-    // Return the component that formats the schedule information.
-    if (selected === item.date) {
-      return (
-        <View>
-          <Text>장소 {item.address}</Text>
-          <Text>날짜 {item.date}</Text>
-          <Text>
-            시간 {item.startTime}~{item.endTime}
-          </Text>
-          <Text>활동내용 {item.description}</Text>
-        </View>
-      );
-    }
-  };
-  return (
-    <SafeAreaView style={styles.container}>
-      <View
-        style={{
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-        }}>
-        <View style={styles.headerContainer}>
-          <Text style={styles.headerText}>일정 </Text>
-        </View>
-        <View>
-          <TouchableOpacity
-            style={{
-              width: 80,
-=======
     const handleLongPress = () => {
       if (userData.job === '선생님') {
         Alert.alert('일정 삭제', '현재 선택한 일정을 삭제하시겠습니까?', [
@@ -479,7 +407,6 @@ export default function Schedule() {
           <TouchableOpacity
             style={{
               width: 60,
->>>>>>> 6a5ec255b3e00d339450966d675f64a943bf2955
               height: 40,
               alignItems: 'center',
               justifyContent: 'center',
@@ -490,19 +417,11 @@ export default function Schedule() {
               setModalState(true);
             }}>
             <View>
-<<<<<<< HEAD
-              <Text>추가</Text>
-            </View>
-          </TouchableOpacity>
-        </View>
-      </View>
-=======
               <Text style={{fontWeight: 'bold'}}>추가</Text>
             </View>
           </TouchableOpacity>
         </View>
       )}
->>>>>>> 6a5ec255b3e00d339450966d675f64a943bf2955
       <View style={styles.calendarContainer}>
         <Calendar
           style={{padding: 0, margin: 0, borderRadius: 15, height: 355}}
@@ -521,25 +440,6 @@ export default function Schedule() {
           }}
         />
       </View>
-<<<<<<< HEAD
-      <View
-        style={{
-          margin: 15,
-          width: itWidth * 0.9,
-          height: 250,
-          borderRadius: 15,
-          alignItems: 'center',
-          justifyContent: 'center',
-          backgroundColor: '#fff',
-          flex: 1,
-        }}>
-        {schedules.length !== 0 && (
-          <FlatList
-            data={schedules}
-            renderItem={renderSchedule}
-            keyExtractor={item => item.id}
-          />
-=======
       <View style={styles.scheduleBox}>
         {schedules.some(schedule => schedule.date === selected) ? (
           <FlatList
@@ -549,7 +449,6 @@ export default function Schedule() {
           />
         ) : (
           <Text>일정이 없습니다</Text>
->>>>>>> 6a5ec255b3e00d339450966d675f64a943bf2955
         )}
       </View>
 
@@ -586,23 +485,7 @@ export default function Schedule() {
             </View>
           </View>
           {autocompleteVisible && address !== '' && (
-<<<<<<< HEAD
-            <View
-              style={{
-                position: 'absolute',
-                width: '90%',
-
-                height: 100,
-                alignSelf: 'center',
-                alignItems: 'center',
-                top: 310,
-                zIndex: 1,
-                borderRadius: 10,
-                backgroundColor: '#FFF',
-              }}>
-=======
             <View style={styles.predictionBox}>
->>>>>>> 6a5ec255b3e00d339450966d675f64a943bf2955
               <FlatList
                 data={predictions}
                 renderItem={renderPrediction}
@@ -636,18 +519,7 @@ export default function Schedule() {
               <Text style={styles.modalItemText}>시간</Text>
             </View>
             <TouchableOpacity
-<<<<<<< HEAD
-              style={{
-                justifyContent: 'center',
-                marginLeft: 15,
-                backgroundColor: '#fff',
-                width: 120,
-                borderRadius: 10,
-                marginTop: 10,
-              }}
-=======
               style={{...styles.timePickerModal, marginLeft: 15}}
->>>>>>> 6a5ec255b3e00d339450966d675f64a943bf2955
               onPress={() => {
                 showStartTimePicker();
               }}>
@@ -660,18 +532,7 @@ export default function Schedule() {
               </View>
             </TouchableOpacity>
             <TouchableOpacity
-<<<<<<< HEAD
-              style={{
-                justifyContent: 'center',
-                marginLeft: 5,
-                backgroundColor: '#fff',
-                width: 120,
-                borderRadius: 10,
-                marginTop: 10,
-              }}
-=======
               style={styles.timePickerModal}
->>>>>>> 6a5ec255b3e00d339450966d675f64a943bf2955
               onPress={() => {
                 showEndTimePicker();
               }}>
@@ -712,32 +573,6 @@ export default function Schedule() {
               />
             </View>
           </View>
-<<<<<<< HEAD
-
-          <TouchableOpacity
-            onPress={() => {
-              addSchedule(selected, address, startTime, endTime, description);
-              setModalState(false);
-              setSelected('');
-              setAddress('');
-              setStartTime('');
-              setEndTime('');
-              setDescription('');
-            }}>
-            <Text>일정추가</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => {
-              setModalState(false);
-              setSelected('');
-              setAddress('');
-              setStartTime('');
-              setEndTime('');
-              setDescription('');
-            }}>
-            <Text>취소</Text>
-          </TouchableOpacity>
-=======
           <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
             <TouchableOpacity
               style={{
@@ -779,7 +614,6 @@ export default function Schedule() {
               <Text style={{color: '#fff', fontWeight: 'bold'}}>취소</Text>
             </TouchableOpacity>
           </View>
->>>>>>> 6a5ec255b3e00d339450966d675f64a943bf2955
         </SafeAreaView>
 
         <DateTimePickerModal
@@ -830,8 +664,6 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     justifyContent: 'center',
   },
-<<<<<<< HEAD
-=======
   scheduleBox: {
     margin: 15,
     width: itWidth * 0.9,
@@ -853,7 +685,6 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: '#FFF',
   },
->>>>>>> 6a5ec255b3e00d339450966d675f64a943bf2955
   modalContainerView: {
     flex: 1,
     backgroundColor: '#B1A8EB',
@@ -892,8 +723,6 @@ const styles = StyleSheet.create({
     fontSize: 26,
     fontWeight: 'bold',
   },
-<<<<<<< HEAD
-=======
   timePickerModal: {
     justifyContent: 'center',
     marginLeft: 5,
@@ -911,5 +740,4 @@ const styles = StyleSheet.create({
     borderRadius: 15,
   },
   scheduleModalButtonText: {},
->>>>>>> 6a5ec255b3e00d339450966d675f64a943bf2955
 });
