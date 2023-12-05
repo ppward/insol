@@ -29,6 +29,12 @@ import {
 
 const API_KEY = 'AIzaSyC3k7HBbhN327lvM3fyx006TZ3bHcYS9KY';
 const itWidth = Dimensions.get('window').width;
+const initialCoord = {
+  latitude: 36.7991,
+  longitude: 127.0748,
+  latitudeDelta: 0.005,
+  longitudeDelta: 0.005,
+};
 
 export default function Schedule() {
   const [selected, setSelected] = useState('');
@@ -36,12 +42,7 @@ export default function Schedule() {
 
   const [address, setAddress] = useState('');
   const [description, setDescription] = useState('');
-  const [coord, setCoord] = useState({
-    latitude: 36.7991,
-    longitude: 127.0748,
-    latitudeDelta: 0.005,
-    longitudeDelta: 0.005,
-  });
+  const [coord, setCoord] = useState(initialCoord);
   const [modelState, setModalState] = useState(false);
   const [userData, setUserData] = useState({});
   const [isStartTimePickerVisible, setStartTimePickerVisibility] =
@@ -234,6 +235,7 @@ export default function Schedule() {
     startTime,
     endTime,
     description,
+    location,
   ) => {
     const newSchedule = {
       date,
@@ -241,6 +243,7 @@ export default function Schedule() {
       startTime,
       endTime,
       description,
+      location,
     };
     try {
       const docRef = doc(collection(firestore, 'schedules'));
@@ -249,6 +252,7 @@ export default function Schedule() {
         ...prevSchedules,
         {...newSchedule, id: docRef.id},
       ]);
+      console.log(coord);
     } catch (error) {
       console.error('Error adding schedule to firebase: ', error);
     }
@@ -593,6 +597,7 @@ export default function Schedule() {
                     startTime,
                     endTime,
                     description,
+                    coord,
                   );
                 }
                 completeModal();

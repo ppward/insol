@@ -7,6 +7,9 @@ import {
   FlatList,
   Image,
   TouchableOpacity,
+  PermissionsAndroid,
+  Platform,
+  ActivityIndicator,
 } from 'react-native';
 import {auth, firestore} from '../Firebase';
 import {
@@ -19,7 +22,6 @@ import {
   updateDoc,
 } from 'firebase/firestore';
 import {CheckBox} from '@rneui/themed';
-import {PermissionsAndroid, Platform} from 'react-native';
 import Geolocation from '@react-native-community/geolocation';
 
 export default function StudentList() {
@@ -27,6 +29,8 @@ export default function StudentList() {
   const [checkedIds, setCheckedIds] = useState({});
   const [userClass, setUserClass] = useState('');
   const [teacherName, setTeacherName] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
   const requestLocationPermission = async () => {
     if (Platform.OS === 'ios') {
       return true;
@@ -151,16 +155,17 @@ export default function StudentList() {
   }, []);
 
   const handleAttendance = async () => {
+    setIsLoading(true);
     const userLocation = await getCurrentUserLocation();
-    if (!userLocation) return;
+    if (!userLocation) {
+      setIsLoading(false);
+      return;
+    }
 
-    // 모든 학생에 대한 출석 확인을 위한 임시 객체
     const tempCheckedIds = {...checkedIds};
-
     for (const student of students) {
       const isClose = await checkProximity(userLocation, student.location);
       tempCheckedIds[student.id] = isClose;
-
       if (isClose) {
         await updateDoc(doc(firestore, 'users', student.id), {
           'attendance.checked': true,
@@ -168,9 +173,8 @@ export default function StudentList() {
         });
       }
     }
-
-    // 모든 학생 처리 후 상태 업데이트
     setCheckedIds(tempCheckedIds);
+    setIsLoading(false);
   };
 
   const checkProximity = (userLocation, studentLocation) => {
@@ -212,45 +216,54 @@ export default function StudentList() {
       <Text style={styles.itemText}>{item.name}</Text>
       <CheckBox
         checked={!!checkedIds[item.id]}
-        disabled={true} // 체크박스를 비활성화합니다.
+        disabled={true}
         iconType="material-community"
         checkedIcon="checkbox-outline"
-        uncheckedIcon={'checkbox-blank-outline'}
+        uncheckedIcon="checkbox-blank-outline"
       />
     </View>
   );
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.headerContainer}>
-        <Image
-          style={styles.profileImage}
-          source={require('../../image/선생님.png')}
-        />
-        <View style={styles.userInfoContainer}>
-          <View style={{flexDirection: 'row'}}>
-            <Text style={styles.profileName}>
-              {teacherName || '선생님 이름'}
-            </Text>
-            <Text style={styles.profileName}> 선생님</Text>
-          </View>
-
-          <View style={{...styles.classInfoContainer, flexDirection: 'row'}}>
-            <Text style={styles.classInfoText}>{userClass}</Text>
-            <Text> 반</Text>
-          </View>
-          <TouchableOpacity
-            style={styles.attendanceButton}
-            onPress={handleAttendance}>
-            <Text style={styles.attendanceButtonText}>출석</Text>
-          </TouchableOpacity>
+      {isLoading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#0000ff" />
         </View>
-      </View>
-      <FlatList
-        data={students}
-        renderItem={renderItem}
-        keyExtractor={item => item.id}
-      />
+      ) : (
+        <View>
+          <View style={styles.headerContainer}>
+            <Image
+              style={styles.profileImage}
+              source={require('../../image/선생님.png')}
+            />
+            <View style={styles.userInfoContainer}>
+              <View style={{flexDirection: 'row'}}>
+                <Text style={styles.profileName}>
+                  {teacherName || '선생님 이름'}
+                </Text>
+                <Text style={styles.profileName}> 선생님</Text>
+              </View>
+
+              <View
+                style={{...styles.classInfoContainer, flexDirection: 'row'}}>
+                <Text style={styles.classInfoText}>{userClass}</Text>
+                <Text> 반</Text>
+              </View>
+              <TouchableOpacity
+                style={styles.attendanceButton}
+                onPress={handleAttendance}>
+                <Text style={styles.attendanceButtonText}>출석</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+          <FlatList
+            data={students}
+            renderItem={renderItem}
+            keyExtractor={item => item.id}
+          />
+        </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -337,5 +350,10 @@ const styles = StyleSheet.create({
   },
   itemText: {
     fontSize: 16,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

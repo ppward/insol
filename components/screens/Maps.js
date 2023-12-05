@@ -23,6 +23,25 @@ import {
   getDocs,
 } from 'firebase/firestore';
 
+const originalConsoleWarn = console.warn;
+
+console.warn = message => {
+  if (
+    message.indexOf(
+      'Warning: This synthetic event is reused for performance reasons.',
+    ) !== -1 ||
+    message.indexOf('Possible Unhandled Promise Rejection') !== -1 ||
+    message.indexOf(
+      'Warning: This synthetic event is reused for performance reasons.',
+    ) !== -1
+  ) {
+    // 이 경고 메시지를 무시합니다.
+    return;
+  }
+
+  originalConsoleWarn(message);
+};
+
 const jobDetails = {
   선생님: {
     image: require('../../image/선생님.png'),
@@ -238,21 +257,55 @@ export default function Maps() {
 
     // 실시간 위치 업데이트 리스너 설정
     const subscribeToLocationUpdates = () => {
-      const usersRef = collection(firestore, 'users');
-      const unsubscribe = onSnapshot(usersRef, querySnapshot => {
-        const updatedUsers = querySnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        setFilteredUsers(updatedUsers);
-      });
+      const uid = auth.currentUser.uid;
+      const userDocRef = doc(firestore, 'users', uid);
+      getDoc(userDocRef).then(userDocSnap => {
+        if (userDocSnap.exists()) {
+          const {
+            job: userJob,
+            email: userEmail,
+            class: userClass,
+          } = userDocSnap.data();
 
-      return unsubscribe;
+          let usersQuery;
+          if (['선생님', '버스기사'].includes(userJob)) {
+            usersQuery = query(
+              collection(firestore, 'users'),
+              where('job', '==', '학생'),
+              where('class', '==', userClass),
+            );
+          } else if (userJob === '학부모') {
+            usersQuery = query(
+              collection(firestore, 'users'),
+              where('parent', '==', userEmail),
+              where('job', '==', '학생'),
+            );
+          } else if (userJob === '학생') {
+            usersQuery = query(
+              collection(firestore, 'users'),
+              where('job', '==', '선생님'),
+              where('class', '==', userClass),
+            );
+          }
+
+          if (usersQuery) {
+            const unsubscribe = onSnapshot(usersQuery, querySnapshot => {
+              const updatedFilteredUsers = querySnapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data(),
+              }));
+              setFilteredUsers(updatedFilteredUsers);
+            });
+
+            return unsubscribe;
+          }
+        }
+      });
     };
+
     const locationUpdateInterval = setInterval(updateCurrentLocation, 30000); // 600000ms = 10분
     requestLocationPermission();
     fetchUserJob();
-    fetchUsersLocation();
     fetchFilteredUsers();
     const locationUpdateUnsubscribe = subscribeToLocationUpdates();
 
