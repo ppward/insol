@@ -57,7 +57,7 @@ export default function Intro() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoginVisible, setIsLoginVisible] = useState(false);
-
+  
   const onOpen = () => {
     setIsLoginVisible(false);
     modalizeRef.current?.open();
@@ -102,55 +102,7 @@ export default function Intro() {
       </ScrollView>
     );
   }
-  const ModalLogin = useCallback(() => {
-    return (
-      <ScrollView
-        contentContainerStyle={{
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}>
-        <View
-          style={{
-            ...styles.modalInput,
-            marginTop: 100,
-          }}>
-          <TextInput
-            placeholder="email을 입력하세요."
-            value={email}
-            onChangeText={setEmaill}
-          />
-        </View>
-        <View style={{...styles.modalInput, marginTop: 20}}>
-          <TextInput
-            placeholder="password를 입력하세요."
-            value={password}
-            onChangeText={setPassword}
-          />
-        </View>
-
-        <TouchableOpacity
-          style={{marginTop: 40}}
-          onPress={() => navigation.navigate('Tab')}>
-          <View
-            style={{
-              width: 185,
-              height: 55,
-              borderRadius: 15,
-              alignItems: 'center',
-              justifyContent: 'center',
-              backgroundColor: '#8C7FE1',
-              borderWidth: 1.5,
-              borderColor: '#fff',
-            }}>
-            <Text style={{fontSize: 25, fontWeight: 'bold'}}>로그인</Text>
-          </View>
-        </TouchableOpacity>
-      </ScrollView>
-    );
-  }, [email, password]);
-  const renderModalContent = () => {
-    return modalChange ? <ModalLogin /> : <ModalContent />;
-  };
+  
   return (
     <View style={styles.container}>
       <TouchableWithoutFeedback onPress={onOpen}>

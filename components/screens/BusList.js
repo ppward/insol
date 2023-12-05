@@ -9,7 +9,6 @@ import {
   TouchableOpacity,
   PermissionsAndroid,
   Platform,
-  ActivityIndicator,
 } from 'react-native';
 import { auth, firestore } from '../Firebase';
 import {
@@ -21,22 +20,19 @@ import {
   getDoc,
   updateDoc,
 } from 'firebase/firestore';
-<<<<<<< HEAD
-import {CheckBox} from '@rneui/themed';
-=======
 import { CheckBox } from '@rneui/themed';
->>>>>>> 85720afd545559febbad50bf8c07221becaaad06
 import Geolocation from '@react-native-community/geolocation';
+import { ActivityIndicator } from 'react-native';
 
-export default function StudentList() {
-  const [students, setStudents] = useState([]);
-  const [checkedIds, setCheckedIds] = useState({});
-  const [userClass, setUserClass] = useState('');
-  const [teacherName, setTeacherName] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-
+export default function BusList() {
+    const [students, setStudents] = useState([]);
+    const [busAttendance, setBusAttendance] = useState({});
+    const [userClass, setUserClass] = useState('');
+    const [teacherName, setTeacherName] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
   const requestLocationPermission = async () => {
     if (Platform.OS === 'ios') {
+      Geolocation.requestAuthorization('whenInUse');
       return true;
     }
 
@@ -72,10 +68,11 @@ export default function StudentList() {
           console.error('Error getting current location:', error);
           reject(null);
         },
-        {enableHighAccuracy: true, timeout: 20000, maximumAge: 1000},
+        { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 },
       );
     });
   };
+
   useEffect(() => {
     const fetchStudents = async () => {
       try {
@@ -90,12 +87,12 @@ export default function StudentList() {
             class: userClass,
             name: userName,
           } = userDocSnap.data();
+
           let studentsQuery;
           if (['선생님', '버스기사'].includes(userJob)) {
-            if (userJob === '선생님') {
+            if (userJob === '버스기사') {
               setTeacherName(userName);
             }
-            const {class: userClass} = userDocSnap.data();
             setUserClass(userClass);
             studentsQuery = query(
               collection(firestore, 'users'),
@@ -115,40 +112,32 @@ export default function StudentList() {
           const querySnapshot = await getDocs(studentsQuery);
           const currentDate = new Date().toISOString().split('T')[0];
 
-          if (querySnapshot.docs.length === 0) {
-            console.log('No students found.');
-          } else {
-            const fetchedStudents = [];
-            const fetchedCheckedIds = {};
+          const fetchedStudents = [];
+          const fetchedBusAttendance = {};
 
-            for (const docSnapshot of querySnapshot.docs) {
-              const studentData = docSnapshot.data();
-              const studentId = docSnapshot.id;
-              const lastCheckedDate =
-                studentData.attendance?.timestamp?.split('T')[0];
-              let isChecked = studentData.attendance?.checked || false;
+          for (const docSnapshot of querySnapshot.docs) {
+            const studentData = docSnapshot.data();
+            const studentId = docSnapshot.id;
 
+            let isChecked = false;
+            if (userJob === '버스기사') {
+              isChecked = studentData.busAttendance?.checked || false;
+              const lastCheckedDate = studentData.busAttendance?.timestamp?.split('T')[0];
               if (lastCheckedDate && lastCheckedDate !== currentDate) {
                 isChecked = false;
                 await updateDoc(doc(firestore, 'users', studentId), {
-                  'attendance.checked': false,
-                  'attendance.timestamp': new Date().toISOString(),
+                  'busAttendance.checked': false,
+                  'busAttendance.timestamp': new Date().toISOString(),
                 });
               }
-
-              fetchedStudents.push({
-                id: studentId,
-                ...studentData,
-                checked: isChecked,
-              });
-              fetchedCheckedIds[studentId] = isChecked;
             }
 
-            setStudents(fetchedStudents);
-            setCheckedIds(fetchedCheckedIds);
+            fetchedStudents.push({ id: studentId, ...studentData, checked: isChecked });
+            fetchedBusAttendance[studentId] = isChecked;
           }
-        } else {
-          console.log('User document does not exist.');
+
+          setStudents(fetchedStudents);
+          setBusAttendance(fetchedBusAttendance);
         }
       } catch (error) {
         console.error('Error fetching students:', error);
@@ -158,30 +147,34 @@ export default function StudentList() {
     fetchStudents();
   }, []);
 
-  const handleAttendance = async () => {
+  const handleBusAttendance = async () => {
     setIsLoading(true);
     const userLocation = await getCurrentUserLocation();
     if (!userLocation) {
-      setIsLoading(false);
-      return;
-    }
-
-<<<<<<< HEAD
-    const tempCheckedIds = {...checkedIds};
-=======
-    const tempCheckedIds = { ...checkedIds };
->>>>>>> 85720afd545559febbad50bf8c07221becaaad06
+        setIsLoading(false); // 로딩 종료
+        return;
+      }
+  
+    // 모든 학생에 대한 버스 출석 확인을 위한 임시 객체
+    const newBusAttendance = { ...busAttendance };
+  
+    // 각 학생에 대한 처리
     for (const student of students) {
       const isClose = await checkProximity(userLocation, student.location);
-      tempCheckedIds[student.id] = isClose;
+      newBusAttendance[student.id] = isClose;
+  
       if (isClose) {
         await updateDoc(doc(firestore, 'users', student.id), {
-          'attendance.checked': true,
-          'attendance.timestamp': new Date().toISOString(),
+          'busAttendance.checked': true,
+          'busAttendance.timestamp': new Date().toISOString(),
         });
+      } else {
+        newBusAttendance[student.id] = false;
       }
     }
-    setCheckedIds(tempCheckedIds);
+  
+    // 모든 학생 처리 후 상태 업데이트
+    setBusAttendance(newBusAttendance);
     setIsLoading(false);
   };
   
@@ -224,7 +217,7 @@ export default function StudentList() {
       />
       <Text style={styles.itemText}>{item.name}</Text>
       <CheckBox
-        checked={!!checkedIds[item.id]}
+        checked={!!busAttendance[item.id]} // busAttendance 사용
         disabled={true}
         iconType="material-community"
         checkedIcon="checkbox-outline"
@@ -237,42 +230,30 @@ export default function StudentList() {
     <SafeAreaView style={styles.container}>
       {isLoading ? (
         <View style={styles.loadingContainer}>
-<<<<<<< HEAD
-          <ActivityIndicator size="large" color="#0000ff" />
-        </View>
-      ) : (
-=======
         <ActivityIndicator size="large" color="#0000ff" />
       </View>
     ) : (
->>>>>>> 85720afd545559febbad50bf8c07221becaaad06
-        <View>
+        <>
           <View style={styles.headerContainer}>
             <Image
               style={styles.profileImage}
-              source={require('../../image/선생님.png')}
+              source={require('../../image/버스.png')}
             />
             <View style={styles.userInfoContainer}>
               <View style={{flexDirection: 'row'}}>
                 <Text style={styles.profileName}>
                   {teacherName || '선생님 이름'}
                 </Text>
-                <Text style={styles.profileName}> 선생님</Text>
+                <Text style={styles.profileName}> 버스기사 </Text>
               </View>
-<<<<<<< HEAD
-
-              <View
-                style={{...styles.classInfoContainer, flexDirection: 'row'}}>
-=======
   
               <View style={{...styles.classInfoContainer, flexDirection: 'row'}}>
->>>>>>> 85720afd545559febbad50bf8c07221becaaad06
                 <Text style={styles.classInfoText}>{userClass}</Text>
                 <Text> 반</Text>
               </View>
               <TouchableOpacity
                 style={styles.attendanceButton}
-                onPress={handleAttendance}>
+                onPress={handleBusAttendance}>
                 <Text style={styles.attendanceButtonText}>출석</Text>
               </TouchableOpacity>
             </View>
@@ -282,7 +263,7 @@ export default function StudentList() {
             renderItem={renderItem}
             keyExtractor={item => item.id}
           />
-        </View>
+        </>
       )}
     </SafeAreaView>
   );

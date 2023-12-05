@@ -6,7 +6,7 @@ import Schedule from '../components/screens/Schedule';
 import StudentList from '../components/screens/StudentList';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { getFirestore, doc, getDoc } from 'firebase/firestore';
-
+import BusList from '../components/screens/BusList';
 const Tab = createBottomTabNavigator();
 
 export default function TabNav() {
@@ -38,11 +38,24 @@ export default function TabNav() {
 
   return (
     <Tab.Navigator initialRouteName="Map" screenOptions={{ headerShown: false }}>
-      { (userRole === '선생님' || userRole === '버스기사') && (
-        // '선생님' 또는 '버스기사' 역할을 가진 사용자만 '학생리스트' 탭을 볼 수 있음
+      { (userRole === '선생님' ) && (
         <Tab.Screen
           name="StudentsList"
           component={StudentList}
+          options={{
+            tabBarIcon: () => (
+              <Image
+                style={{ width: 30, height: 30 }}
+                source={require('../assets/customer.png')}
+              />
+            ),
+          }}
+        />
+      )}
+      { (userRole === '버스기사' ) && (
+        <Tab.Screen
+          name="BusList"
+          component={BusList}
           options={{
             tabBarIcon: () => (
               <Image
