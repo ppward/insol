@@ -103,7 +103,11 @@ const SignUpScreen = ({navigation}) => {
       if (!studentQuerySnapshot.empty) {
         const studentDoc = studentQuerySnapshot.docs[0]; // 첫 번째 문서를 선택
         studentClass = studentDoc.data().class; // 학생의 class 정보 저장
+<<<<<<< HEAD
 
+=======
+  
+>>>>>>> ecb57286733129cabc75569ef1ca2da0e90ade61
         // 이미 parent 필드가 존재하면 회원가입 중단
         if (studentDoc.data().parent) {
           Alert.alert('오류', '이미 다른 학부모가 등록된 학생입니다.');
@@ -136,6 +140,10 @@ const SignUpScreen = ({navigation}) => {
         // 학부모의 경우 studentEmail을 저장하고, 그렇지 않은 경우 null을 저장
         studentEmail: inputJob === '학부모' ? inputStudentEmail : null,
         // 다른 필드 추가 가능
+        attendance: {
+          checked: false, // 기본값을 false로 설정
+          timestamp: '', // timestamp를 빈 문자열로 설정
+        },
       };
 
       // Firestore에 사용자 문서 생성
