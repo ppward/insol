@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   View,
   Text,
@@ -11,7 +11,7 @@ import {
   Platform,
   ActivityIndicator,
 } from 'react-native';
-import { auth, firestore } from '../Firebase';
+import {auth, firestore} from '../Firebase';
 import {
   collection,
   query,
@@ -21,11 +21,7 @@ import {
   getDoc,
   updateDoc,
 } from 'firebase/firestore';
-<<<<<<< HEAD
 import {CheckBox} from '@rneui/themed';
-=======
-import { CheckBox } from '@rneui/themed';
->>>>>>> 85720afd545559febbad50bf8c07221becaaad06
 import Geolocation from '@react-native-community/geolocation';
 
 export default function StudentList() {
@@ -166,11 +162,7 @@ export default function StudentList() {
       return;
     }
 
-<<<<<<< HEAD
     const tempCheckedIds = {...checkedIds};
-=======
-    const tempCheckedIds = { ...checkedIds };
->>>>>>> 85720afd545559febbad50bf8c07221becaaad06
     for (const student of students) {
       const isClose = await checkProximity(userLocation, student.location);
       tempCheckedIds[student.id] = isClose;
@@ -184,7 +176,6 @@ export default function StudentList() {
     setCheckedIds(tempCheckedIds);
     setIsLoading(false);
   };
-  
 
   const checkProximity = (userLocation, studentLocation) => {
     const {latitude: userLat, longitude: userLng} = userLocation;
@@ -216,10 +207,10 @@ export default function StudentList() {
     return deg * (Math.PI / 180);
   };
 
-  const renderItem = ({ item }) => (
+  const renderItem = ({item}) => (
     <View style={styles.itemContainer}>
       <Image
-        style={{ width: 67, height: 67 }}
+        style={{width: 67, height: 67}}
         source={require('../../image/학생.png')}
       />
       <Text style={styles.itemText}>{item.name}</Text>
@@ -237,15 +228,9 @@ export default function StudentList() {
     <SafeAreaView style={styles.container}>
       {isLoading ? (
         <View style={styles.loadingContainer}>
-<<<<<<< HEAD
           <ActivityIndicator size="large" color="#0000ff" />
         </View>
       ) : (
-=======
-        <ActivityIndicator size="large" color="#0000ff" />
-      </View>
-    ) : (
->>>>>>> 85720afd545559febbad50bf8c07221becaaad06
         <View>
           <View style={styles.headerContainer}>
             <Image
@@ -259,14 +244,9 @@ export default function StudentList() {
                 </Text>
                 <Text style={styles.profileName}> 선생님</Text>
               </View>
-<<<<<<< HEAD
 
               <View
                 style={{...styles.classInfoContainer, flexDirection: 'row'}}>
-=======
-  
-              <View style={{...styles.classInfoContainer, flexDirection: 'row'}}>
->>>>>>> 85720afd545559febbad50bf8c07221becaaad06
                 <Text style={styles.classInfoText}>{userClass}</Text>
                 <Text> 반</Text>
               </View>
@@ -286,7 +266,6 @@ export default function StudentList() {
       )}
     </SafeAreaView>
   );
-  
 }
 
 const styles = StyleSheet.create({

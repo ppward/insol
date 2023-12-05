@@ -401,6 +401,7 @@ export default function Schedule() {
     setStartTime('');
     setEndTime('');
     setDescription('');
+    setCoord(initialCoord);
   };
   return (
     <SafeAreaView style={styles.container}>
@@ -408,7 +409,7 @@ export default function Schedule() {
         <Text style={styles.headerText}>일정 </Text>
       </View>
       {userData.job === '선생님' && (
-        <View style={{position: 'absolute',zIndex: 1,right: 20, top: 80}}>
+        <View style={{position: 'absolute', zIndex: 1, right: 20, top: 80}}>
           <TouchableOpacity
             style={{
               width: 60,
