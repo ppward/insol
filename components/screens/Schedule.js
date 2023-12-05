@@ -6,7 +6,7 @@ import {
   SafeAreaView,
   StyleSheet,
   Modal,
-  Button,
+  Alert,
   Dimensions,
   FlatList,
   TouchableOpacity,
@@ -14,6 +14,19 @@ import {
 import MapView, {PROVIDER_GOOGLE} from 'react-native-maps';
 import {Calendar} from 'react-native-calendars';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
+import {auth, firestore} from '../Firebase';
+import {
+  doc,
+  getDoc,
+  setDoc,
+  collection,
+  query,
+  where,
+  onSnapshot,
+  getDocs,
+  deleteDoc,
+} from 'firebase/firestore';
+
 const API_KEY = 'AIzaSyC3k7HBbhN327lvM3fyx006TZ3bHcYS9KY';
 const itWidth = Dimensions.get('window').width;
 
@@ -30,12 +43,61 @@ export default function Schedule() {
     longitudeDelta: 0.005,
   });
   const [modelState, setModalState] = useState(false);
-
+  const [userData, setUserData] = useState({});
   const [isStartTimePickerVisible, setStartTimePickerVisibility] =
     useState(false);
   const [isEndTimePickerVisible, setEndTimePickerVisibility] = useState(false);
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const uid = auth.currentUser.uid;
+        const userDocRef = doc(firestore, 'users', uid);
+        const userDocSnap = await getDoc(userDocRef);
+        if (userDocSnap.exists()) {
+          setUserData(userDocSnap.data());
+          console.log(userDocSnap.data().class);
+        } else {
+          console.error('No such Document');
+        }
+      } catch (error) {
+        console.error('Error such Document : ', error);
+      }
+    };
+    fetchUserData();
+  }, []);
+  useEffect(() => {
+    const fetchSchedules = async () => {
+      try {
+        const q = query(
+          collection(firestore, 'schedules'),
+          where('class', '==', userData.class),
+        );
+        const querySnapshot = await getDocs(q);
+
+        // Check if the querySnapshot has any documents
+        if (querySnapshot.size === 0) {
+          // If no documents are found, set schedules to an empty array
+          setSchedules([]);
+        } else {
+          // If documents are found, map over them and set schedules
+          const schedulesData = querySnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+          }));
+          setSchedules(schedulesData);
+        }
+      } catch (error) {
+        console.error('Error occurred while retrieving schedule: ', error);
+        setSchedules([]); // Also set to empty if there is an error fetching schedules
+      }
+    };
+    if (userData.class) {
+      fetchSchedules();
+    }
+  }, [userData]);
 
   const showStartTimePicker = () => {
     setStartTimePickerVisibility(true);
@@ -115,7 +177,6 @@ export default function Schedule() {
       <TouchableOpacity
         style={{
           margin: 1,
-
           height: 30,
           justifyContent: 'center',
         }}
@@ -124,6 +185,7 @@ export default function Schedule() {
       </TouchableOpacity>
     );
   };
+
   const geocodeAddress = async address => {
     try {
       const response = await fetch(
@@ -166,18 +228,110 @@ export default function Schedule() {
       console.log('Failed to geocode address. Please try again.');
     }
   };
-  const addSchedule = (date, address, startTime, endTime, description) => {
-    setSchedules(prevSchedules => [
-      ...prevSchedules,
-      {
-        date,
-        address,
-        startTime,
-        endTime,
-        description,
-        id: Math.random().toString(),
-      },
-    ]);
+  const addSchedule = async (
+    date,
+    address,
+    startTime,
+    endTime,
+    description,
+  ) => {
+    const newSchedule = {
+      date,
+      address,
+      startTime,
+      endTime,
+      description,
+    };
+    try {
+      const docRef = doc(collection(firestore, 'schedules'));
+      await setDoc(docRef, {...newSchedule, class: userData.class}); // 파이어베이스 데이타 추가
+      setSchedules(prevSchedules => [
+        ...prevSchedules,
+        {...newSchedule, id: docRef.id},
+      ]);
+    } catch (error) {
+      console.error('Error adding schedule to firebase: ', error);
+    }
+  };
+  const markedDates = schedules.reduce((acc, curr) => {
+    const dot = {key: 'dot', color: 'blue', selectedDotColor: 'blue'};
+
+    if (curr.date) {
+      if (acc[curr.date]) {
+        // If there's already an entry for this date, just push the dot
+        acc[curr.date].dots.push(dot);
+      } else {
+        // Otherwise, create a new entry
+        acc[curr.date] = {dots: [dot], marked: true};
+      }
+    }
+    return acc;
+  }, {});
+  const [edit, setEdit] = useState(false);
+  const [editId, setEditId] = useState('');
+  const openEditModal = scheduleId => {
+    const scheduleToEdit = schedules.find(
+      schedule => schedule.id === scheduleId,
+    );
+    console.log('여기', scheduleToEdit);
+    if (scheduleToEdit) {
+      setSelected(scheduleToEdit.date);
+      setAddress(scheduleToEdit.address);
+      setStartTime(scheduleToEdit.startTime);
+      setEndTime(scheduleToEdit.endTime);
+      setDescription(scheduleToEdit.description);
+      setEditId(scheduleId);
+      //setEdit(true); // Assuming you have a state to track if it's an edit operation
+      setModalState(true);
+      setEdit(true);
+    }
+  };
+
+  const updateSchedule = async () => {
+    const editedSchedule = {
+      date: selected,
+      address: address,
+      startTime: startTime,
+      endTime: endTime,
+      description: description,
+      id: editId,
+    };
+
+    const updatedSchedules = schedules.map(schedule =>
+      schedule.id === editId ? {...schedule, ...editedSchedule} : schedule,
+    );
+    setSchedules(updatedSchedules);
+
+    // Update in Firestore
+    const scheduleRef = doc(firestore, 'schedules', editId);
+    try {
+      await setDoc(scheduleRef, editedSchedule, {merge: true});
+      console.log('Schedule updated successfully');
+    } catch (error) {
+      console.error('Error updating schedule: ', error);
+    }
+
+    // Reset states and close modal
+    setEdit(false);
+
+    setEditId('');
+    // Reset other states like selected, address, etc. if needed
+  };
+
+  const deleteSchedule = async scheduleId => {
+    const docRef = doc(firestore, 'schedules', scheduleId);
+
+    try {
+      await deleteDoc(docRef);
+      console.log('Document successfully deleted!');
+
+      // Update state to remove the schedule from the list
+      setSchedules(prevSchedules =>
+        prevSchedules.filter(schedule => schedule.id !== scheduleId),
+      );
+    } catch (error) {
+      console.error('Error removing schedule: ', error);
+    }
   };
   // TextInput에 포커스가 있을 때 자동완성 활성화
   const handleFocus = () => {
@@ -190,61 +344,112 @@ export default function Schedule() {
   const handleBlur = () => {
     setAutocompleteVisible(false);
   };
-  const renderSchedule = ({ item }) => {
+  const renderSchedule = ({item}) => {
     // Check if 'item' is not null or undefined.
     if (!item) {
       return null; // or return a placeholder component
     }
-  
+    const handleLongPress = () => {
+      if (userData.job === '선생님') {
+        Alert.alert('일정 삭제', '현재 선택한 일정을 삭제하시겠습니까?', [
+          // Button array
+          {
+            text: 'No',
+            onPress: () => console.log('Cancel Pressed'),
+            style: 'cancel',
+          },
+          {
+            text: 'Yes',
+            onPress: () => deleteSchedule(item.id),
+          },
+        ]);
+      }
+    };
+    const handlePress = () => {
+      if (userData.job === '선생님') {
+        openEditModal(item.id);
+      }
+    };
     // Return the component that formats the schedule information.
-    return (
-      <View >
-        <Text>날짜 {item.date}</Text>
-        <Text>시간 {item.startTime}~{item.endTime}</Text>
-        
-        <Text>장소 {item.address}</Text>
-        <Text>활동내용 {item.description}</Text>
-      </View>
-    );
+    if (selected === item.date) {
+      return (
+        <TouchableOpacity
+          onPress={() => handlePress()}
+          onLongPress={() => {
+            handleLongPress();
+          }}>
+          <View>
+            <Text>장소 {item.address}</Text>
+            <Text>날짜 {item.date}</Text>
+            <Text>
+              시간 {item.startTime}~{item.endTime}
+            </Text>
+            <Text>활동내용 {item.description}</Text>
+          </View>
+        </TouchableOpacity>
+      );
+    }
+  };
+  const completeModal = () => {
+    setModalState(false);
+    setSelected('');
+    setAddress('');
+    setStartTime('');
+    setEndTime('');
+    setDescription('');
   };
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.headerContainer}>
         <Text style={styles.headerText}>일정 </Text>
       </View>
+      {userData.job === '선생님' && (
+        <View style={{position: 'absolute', right: 20, top: 80}}>
+          <TouchableOpacity
+            style={{
+              width: 60,
+              height: 40,
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: '#4CAF50',
+              borderRadius: 15,
+            }}
+            onPress={() => {
+              setModalState(true);
+            }}>
+            <View>
+              <Text style={{fontWeight: 'bold'}}>추가</Text>
+            </View>
+          </TouchableOpacity>
+        </View>
+      )}
       <View style={styles.calendarContainer}>
         <Calendar
-          style={{padding: 0, margin: 0, borderRadius: 15}}
+          style={{padding: 0, margin: 0, borderRadius: 15, height: 355}}
           onDayPress={day => {
             setSelected(day.dateString);
-            setModalState(true);
           }}
           markedDates={{
+            ...markedDates, // Spread the markedDates from the reducer
             [selected]: {
+              ...markedDates[selected], // Spread any existing properties for the selected date
               selected: true,
               disableTouchEvent: true,
               selectedDotColor: 'orange',
+              selectedColor: 'blue', // Assuming you want the selected day to also have a blue background
             },
           }}
         />
       </View>
-      <View
-        style={{
-          margin: 15,
-          width: itWidth * 0.9,
-          height: 250,
-          borderRadius: 15,
-          alignItems: 'center',
-          justifyContent: 'center',
-          backgroundColor:"#fff",
-          flex:1
-        }}>
-        {schedules.length !== 0 && (
+      <View style={styles.scheduleBox}>
+        {schedules.some(schedule => schedule.date === selected) ? (
           <FlatList
-            data={schedules}
+            data={schedules.filter(schedule => schedule.date === selected)}
             renderItem={renderSchedule}
             keyExtractor={item => item.id}
           />
+        ) : (
+          <Text>일정이 없습니다</Text>
         )}
       </View>
 
@@ -281,19 +486,7 @@ export default function Schedule() {
             </View>
           </View>
           {autocompleteVisible && address !== '' && (
-            <View
-              style={{
-                position: 'absolute',
-                width: '90%',
-
-                height: 100,
-                alignSelf: 'center',
-                alignItems: 'center',
-                top: 310,
-                zIndex: 1,
-                borderRadius: 10,
-                backgroundColor: '#FFF',
-              }}>
+            <View style={styles.predictionBox}>
               <FlatList
                 data={predictions}
                 renderItem={renderPrediction}
@@ -327,14 +520,7 @@ export default function Schedule() {
               <Text style={styles.modalItemText}>시간</Text>
             </View>
             <TouchableOpacity
-              style={{
-                justifyContent: 'center',
-                marginLeft: 15,
-                backgroundColor: '#fff',
-                width: 120,
-                borderRadius: 10,
-                marginTop: 10,
-              }}
+              style={{...styles.timePickerModal, marginLeft: 15}}
               onPress={() => {
                 showStartTimePicker();
               }}>
@@ -347,14 +533,7 @@ export default function Schedule() {
               </View>
             </TouchableOpacity>
             <TouchableOpacity
-              style={{
-                justifyContent: 'center',
-                marginLeft: 5,
-                backgroundColor: '#fff',
-                width: 120,
-                borderRadius: 10,
-                marginTop: 10,
-              }}
+              style={styles.timePickerModal}
               onPress={() => {
                 showEndTimePicker();
               }}>
@@ -395,15 +574,47 @@ export default function Schedule() {
               />
             </View>
           </View>
-
-          <Button
-            title="일정 추가"
-            onPress={() => {
-              addSchedule(selected, address, startTime, endTime, description);
-              setModalState(false);
-              console.log('날짜: ', selected);
-            }}
-          />
+          <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
+            <TouchableOpacity
+              style={{
+                ...styles.scheduleModalButton,
+                marginLeft: 20,
+                backgroundColor: edit ? 'lightskyblue' : '#4E9F3D',
+              }}
+              onPress={() => {
+                if (edit) {
+                  // 수정 로직
+                  updateSchedule();
+                } else {
+                  // 일정 추가 로직
+                  addSchedule(
+                    selected,
+                    address,
+                    startTime,
+                    endTime,
+                    description,
+                  );
+                }
+                completeModal();
+              }}>
+              <Text style={{color: '#fff', fontSize: 16, fontWeight: 'bold'}}>
+                {edit ? '수정하기' : '일정추가'}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={{
+                ...styles.scheduleModalButton,
+                marginRight: 30,
+                backgroundColor: 'red',
+              }}
+              onPress={() => {
+                setEdit(false);
+                setEditId('');
+                completeModal();
+              }}>
+              <Text style={{color: '#fff', fontWeight: 'bold'}}>취소</Text>
+            </TouchableOpacity>
+          </View>
         </SafeAreaView>
 
         <DateTimePickerModal
@@ -447,12 +658,33 @@ const styles = StyleSheet.create({
     fontSize: 26,
   },
   calendarContainer: {
-    width: itWidth * 0.8,
+    width: itWidth * 0.9,
     height: 330,
-    marginTop: 30,
+    marginTop: 20,
     borderRadius: 15,
     overflow: 'hidden',
     justifyContent: 'center',
+  },
+  scheduleBox: {
+    margin: 15,
+    width: itWidth * 0.9,
+    height: 250,
+    borderRadius: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fff',
+    flex: 1,
+  },
+  predictionBox: {
+    position: 'absolute',
+    width: '90%',
+    height: 100,
+    alignSelf: 'center',
+    alignItems: 'center',
+    top: 310,
+    zIndex: 1,
+    borderRadius: 10,
+    backgroundColor: '#FFF',
   },
   modalContainerView: {
     flex: 1,
@@ -492,4 +724,21 @@ const styles = StyleSheet.create({
     fontSize: 26,
     fontWeight: 'bold',
   },
+  timePickerModal: {
+    justifyContent: 'center',
+    marginLeft: 5,
+    backgroundColor: '#fff',
+    width: 120,
+    borderRadius: 10,
+    marginTop: 10,
+  },
+  scheduleModalButton: {
+    width: 120,
+    height: 50,
+    marginTop: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 15,
+  },
+  scheduleModalButtonText: {},
 });

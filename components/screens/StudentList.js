@@ -24,12 +24,11 @@ import Geolocation from '@react-native-community/geolocation';
 
 export default function StudentList() {
   const [students, setStudents] = useState([]);
-  const [checkedIds, setCheckedIds] = useState({}); // 체크된 학생들의 ID를 관리합니다.
+  const [checkedIds, setCheckedIds] = useState({});
   const [userClass, setUserClass] = useState('');
   const [teacherName, setTeacherName] = useState('');
   const requestLocationPermission = async () => {
     if (Platform.OS === 'ios') {
-      Geolocation.requestAuthorization('whenInUse');
       return true;
     }
 
@@ -155,23 +154,23 @@ export default function StudentList() {
     const userLocation = await getCurrentUserLocation();
     if (!userLocation) return;
 
-    // 새로운 출석 상태를 위한 객체를 생성합니다.
-    const newCheckedIds = {...checkedIds};
+    // 모든 학생에 대한 출석 확인을 위한 임시 객체
+    const tempCheckedIds = {...checkedIds};
 
-    students.forEach(async student => {
+    for (const student of students) {
       const isClose = await checkProximity(userLocation, student.location);
-      if (isClose) {
-        newCheckedIds[student.id] = true; // 출석 상태를 true로 설정합니다.
-        await updateDoc(doc(firestore, 'users', student.id), {
-          'attendance.checked': true, // Firebase 문서를 업데이트합니다.
-          'attendance.timestamp': new Date().toISOString(), // 현재 시간으로 타임스탬프를 설정합니다.
-        });
-      } else {
-        newCheckedIds[student.id] = false; // 범위 밖에 있으면 false로 설정합니다.
-      }
-    });
+      tempCheckedIds[student.id] = isClose;
 
-    setCheckedIds(newCheckedIds); // 상태를 업데이트합니다.
+      if (isClose) {
+        await updateDoc(doc(firestore, 'users', student.id), {
+          'attendance.checked': true,
+          'attendance.timestamp': new Date().toISOString(),
+        });
+      }
+    }
+
+    // 모든 학생 처리 후 상태 업데이트
+    setCheckedIds(tempCheckedIds);
   };
 
   const checkProximity = (userLocation, studentLocation) => {
