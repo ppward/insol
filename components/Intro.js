@@ -18,7 +18,7 @@ import {signInWithEmailAndPassword} from 'firebase/auth';
 
 const device_Height = Dimensions.get('window').height;
 const device_Width = Dimensions.get('window').width;
-
+const onFocusedHeight = device_Height * 0.8;
 // Separate component for the login modal content
 const LoginModalContent = ({
   onLogin,
@@ -29,21 +29,24 @@ const LoginModalContent = ({
 }) => {
   return (
     <View style={styles.modalContentContainer}>
-      <TextInput
-        style={styles.input}
-        onChangeText={onEmailChange}
-        value={email}
-        placeholder="이메일"
-        keyboardType="email-address"
-        autoCapitalize="none"
-      />
-      <TextInput
-        style={styles.input}
-        onChangeText={onPasswordChange}
-        value={password}
-        placeholder="비밀번호"
-        secureTextEntry
-      />
+      <View style={{...styles.input, backgroundColor: '#f5f5f5'}}>
+        <TextInput
+          style={{}}
+          onChangeText={onEmailChange}
+          value={email}
+          placeholder="이메일"
+          keyboardType="email-address"
+          autoCapitalize="none"
+        />
+      </View>
+      <View style={{...styles.input, backgroundColor: '#f5f5f5'}}>
+        <TextInput
+          onChangeText={onPasswordChange}
+          value={password}
+          placeholder="비밀번호"
+          secureTextEntry
+        />
+      </View>
       <TouchableOpacity style={styles.modalButton} onPress={onLogin}>
         <Text style={styles.modalButtonText}>로그인</Text>
       </TouchableOpacity>
@@ -57,7 +60,7 @@ export default function Intro() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoginVisible, setIsLoginVisible] = useState(false);
-  
+
   const onOpen = () => {
     setIsLoginVisible(false);
     modalizeRef.current?.open();
@@ -102,7 +105,7 @@ export default function Intro() {
       </ScrollView>
     );
   }
-  
+
   return (
     <View style={styles.container}>
       <TouchableWithoutFeedback onPress={onOpen}>

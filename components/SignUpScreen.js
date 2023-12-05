@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   StyleSheet,
   View,
@@ -11,14 +11,22 @@ import {
   Alert,
   Dimensions,
   TouchableWithoutFeedback,
-  ActivityIndicator
+  ActivityIndicator,
 } from 'react-native';
-import { Picker } from '@react-native-picker/picker';
-import { auth, firestore } from './Firebase';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { query, collection, where, getDoc, getDocs, setDoc, doc } from 'firebase/firestore';
+import {Picker} from '@react-native-picker/picker';
+import {auth, firestore} from './Firebase';
+import {createUserWithEmailAndPassword} from 'firebase/auth';
+import {
+  query,
+  collection,
+  where,
+  getDoc,
+  getDocs,
+  setDoc,
+  doc,
+} from 'firebase/firestore';
 
-const SignUpScreen = ({ navigation }) => {
+const SignUpScreen = ({navigation}) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [inputEmail, setInputEmail] = useState('');
   const [inputPassword, setInputPassword] = useState('');
@@ -30,24 +38,28 @@ const SignUpScreen = ({ navigation }) => {
   const [selectedKindergarten, setSelectedKindergarten] = useState(); // 선택된 유치원 상태
   const [loading, setLoading] = useState(false);
 
-
   const fetchKindergartens = async () => {
     setLoading(true);
     try {
-      const querySnapshot = await getDocs(collection(firestore, 'kindergarden'));
+      const querySnapshot = await getDocs(
+        collection(firestore, 'kindergarden'),
+      );
       const fetchedKindergartens = querySnapshot.docs.map(doc => ({
         id: doc.id,
         name: doc.data().name,
         location: doc.data().location,
       }));
-  
+
       if (fetchedKindergartens.length === 0) {
-        Alert.alert('경고', '유치원 정보를 불러올 수 없습니다. 관리자에게 문의하세요.');
+        Alert.alert(
+          '경고',
+          '유치원 정보를 불러올 수 없습니다. 관리자에게 문의하세요.',
+        );
         return;
       }
-  
+
       setKindergartens(fetchedKindergartens);
-      // 초기 선택된 유치원을 설정합니다. 
+      // 초기 선택된 유치원을 설정합니다.
       setSelectedKindergarten(fetchedKindergartens[0].id);
     } catch (error) {
       Alert.alert('Error', 'Failed to fetch kindergartens');
@@ -83,7 +95,9 @@ const SignUpScreen = ({ navigation }) => {
     // 이름을 기준으로 선택된 유치원 객체 찾기
     let selectedKinderInfo = null;
     if (inputJob === '학생' && selectedKindergarten) {
-      selectedKinderInfo = kindergartens.find(kinder => kinder.id === selectedKindergarten);
+      selectedKinderInfo = kindergartens.find(
+        kinder => kinder.id === selectedKindergarten,
+      );
       if (!selectedKinderInfo) {
         Alert.alert('오류', '유치원을 선택해 주세요');
         return;
@@ -92,7 +106,11 @@ const SignUpScreen = ({ navigation }) => {
 
     // Firebase 인증을 사용하여 사용자 등록
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, inputEmail, inputPassword);
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        inputEmail,
+        inputPassword,
+      );
 
       // Firestore에 저장할 사용자 데이터 준비
       const userData = {
@@ -102,13 +120,16 @@ const SignUpScreen = ({ navigation }) => {
         class: inputClass,
         studentEmail: inputJob === '학부모' ? inputStudentEmail : null,
       };
-      console.log('-----------------------------------------------------',selectedKinderInfo)
+      console.log(
+        '-----------------------------------------------------',
+        selectedKinderInfo,
+      );
       // 사용자가 학생인 경우 선택한 유치원 정보 추가
       if (inputJob === '학생' && selectedKinderInfo) {
-        console.log('-----------------------------------------------------')
+        console.log('-----------------------------------------------------');
         const seoulStationLocation = {
           latitude: 37.5563,
-          longitude: 126.9723
+          longitude: 126.9723,
         };
         userData.location = seoulStationLocation;
         userData.kindergarten = selectedKinderInfo.name;
@@ -116,10 +137,14 @@ const SignUpScreen = ({ navigation }) => {
         // 데이터 구조에 맞게 location 필드가 객체 형태로 저장되어야 합니다.
         userData.kindergartenlocation = {
           latitude: selectedKinderInfo.location.latitude,
-          longitude: selectedKinderInfo.location.longitude
+          longitude: selectedKinderInfo.location.longitude,
         };
         console.log(`Selected kindergarten's name: ${selectedKinderInfo.name}`);
-        console.log(`Selected kindergarten's location: ${JSON.stringify(selectedKinderInfo.location)}`);
+        console.log(
+          `Selected kindergarten's location: ${JSON.stringify(
+            selectedKinderInfo.location,
+          )}`,
+        );
       }
 
       // 사용자 데이터를 Firestore에 저장
@@ -188,19 +213,38 @@ const SignUpScreen = ({ navigation }) => {
           />
         )}
         {inputJob === '학생' && (
-          <Picker
-            selectedValue={selectedKindergarten}
-            onValueChange={(itemValue, itemIndex) => {
-              setSelectedKindergarten(itemValue);
-            }}
-            style={styles.pickerStyle}
-          >
-            {kindergartens.map((kinder) => (
-              <Picker.Item key={kinder.id} label={kinder.name} value={kinder.id} />
-            ))}
-          </Picker>
+          <TouchableWithoutFeedback
+            onPress={event => {
+              event.stopPropagation();
+            }}>
+            <View style={{height: 50, width: 150}}>
+              <Picker
+                style={{
+                  backgroundColor: '#fff',
+                  borderRadius: 15, // Removed semicolon as it's invalid inside an object
+                }}
+                selectedValue={selectedKindergarten}
+                onValueChange={(itemValue, itemIndex) =>
+                  setSelectedKindergarten(itemValue)
+                }>
+                {kindergartens.map(kinder => (
+                  <Picker.Item
+                    key={kinder.id}
+                    label={kinder.name}
+                    value={kinder.id}
+                  />
+                ))}
+              </Picker>
+            </View>
+          </TouchableWithoutFeedback>
         )}
-        <TouchableOpacity style={styles.button} onPress={handleSignUp}>
+        <TouchableOpacity
+          style={
+            inputJob === '학생'
+              ? {...styles.button, marginTop: 200}
+              : styles.button
+          }
+          onPress={handleSignUp}>
           <Text style={styles.buttonText}>회원가입</Text>
         </TouchableOpacity>
       </View>
@@ -217,7 +261,7 @@ const SignUpScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={{ ...styles.half, alignItems: 'flex-end' }}>
+      <View style={{...styles.half, alignItems: 'flex-end'}}>
         <View style={styles.quadrant}>
           <TouchableOpacity
             style={styles.signupButton}
@@ -245,7 +289,7 @@ const SignUpScreen = ({ navigation }) => {
         </View>
       </View>
 
-      <View style={{ ...styles.half, alignItems: 'flex-start' }}>
+      <View style={{...styles.half, alignItems: 'flex-start'}}>
         <View style={styles.quadrant}>
           <TouchableOpacity
             style={styles.signupButton}
@@ -272,12 +316,9 @@ const SignUpScreen = ({ navigation }) => {
         animationType="slide"
         transparent={true}
         visible={modalVisible}
-        onRequestClose={() => setModalVisible(!modalVisible)}
-      >
+        onRequestClose={() => setModalVisible(!modalVisible)}>
         <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
-          <View style={styles.modalOverlay}>
-            {renderModalContent()}
-          </View>
+          <View style={styles.modalOverlay}>{renderModalContent()}</View>
         </TouchableWithoutFeedback>
       </Modal>
     </SafeAreaView>
@@ -370,6 +411,20 @@ const styles = StyleSheet.create({
     height: 50, // 또는 원하는 높이
     backgroundColor: '#FFFFFF', // 흰색 배경
     color: '#000000', // 검은색 글자
+  },
+  button: {
+    width: 150,
+    height: 50,
+    marginTop: 40,
+    backgroundColor: '#4E9F3D',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 15,
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: 'bold',
   },
 });
 
