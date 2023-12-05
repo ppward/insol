@@ -29,9 +29,9 @@ const LoginModalContent = ({
 }) => {
   return (
     <View style={styles.modalContentContainer}>
-      <View style={{...styles.input, backgroundColor: '#f5f5f5'}}>
+      <View style={{width : '80%'}}>
         <TextInput
-          style={{}}
+          style={{...styles.input, backgroundColor: '#f5f5f5'}}
           onChangeText={onEmailChange}
           value={email}
           placeholder="이메일"
@@ -39,8 +39,9 @@ const LoginModalContent = ({
           autoCapitalize="none"
         />
       </View>
-      <View style={{...styles.input, backgroundColor: '#f5f5f5'}}>
+      <View style={{width : '80%'}}>
         <TextInput
+          style={{...styles.input, backgroundColor: '#f5f5f5'}}
           onChangeText={onPasswordChange}
           value={password}
           placeholder="비밀번호"
@@ -172,7 +173,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   input: {
-    width: '80%',
     height: 50,
     borderWidth: 1,
     borderColor: 'gray',
