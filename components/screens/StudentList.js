@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 import React, { useState, useEffect } from 'react';
+=======
+import React, {useState, useEffect} from 'react';
+>>>>>>> 6a5ec255b3e00d339450966d675f64a943bf2955
 import {
   View,
   Text,
@@ -7,11 +11,16 @@ import {
   FlatList,
   Image,
   TouchableOpacity,
+<<<<<<< HEAD
   PermissionsAndroid,
   Platform,
   ActivityIndicator,
 } from 'react-native';
 import { auth, firestore } from '../Firebase';
+=======
+} from 'react-native';
+import {auth, firestore} from '../Firebase';
+>>>>>>> 6a5ec255b3e00d339450966d675f64a943bf2955
 import {
   collection,
   query,
@@ -21,7 +30,12 @@ import {
   getDoc,
   updateDoc,
 } from 'firebase/firestore';
+<<<<<<< HEAD
 import { CheckBox } from '@rneui/themed';
+=======
+import {CheckBox} from '@rneui/themed';
+import {PermissionsAndroid, Platform} from 'react-native';
+>>>>>>> 6a5ec255b3e00d339450966d675f64a943bf2955
 import Geolocation from '@react-native-community/geolocation';
 
 export default function StudentList() {
@@ -29,11 +43,16 @@ export default function StudentList() {
   const [checkedIds, setCheckedIds] = useState({});
   const [userClass, setUserClass] = useState('');
   const [teacherName, setTeacherName] = useState('');
+<<<<<<< HEAD
   const [isLoading, setIsLoading] = useState(false);
 
   const requestLocationPermission = async () => {
     if (Platform.OS === 'ios') {
       Geolocation.requestAuthorization('whenInUse');
+=======
+  const requestLocationPermission = async () => {
+    if (Platform.OS === 'ios') {
+>>>>>>> 6a5ec255b3e00d339450966d675f64a943bf2955
       return true;
     }
 
@@ -156,6 +175,7 @@ export default function StudentList() {
   }, []);
 
   const handleAttendance = async () => {
+<<<<<<< HEAD
     setIsLoading(true);
     const userLocation = await getCurrentUserLocation();
     if (!userLocation) {
@@ -167,6 +187,18 @@ export default function StudentList() {
     for (const student of students) {
       const isClose = await checkProximity(userLocation, student.location);
       tempCheckedIds[student.id] = isClose;
+=======
+    const userLocation = await getCurrentUserLocation();
+    if (!userLocation) return;
+
+    // 모든 학생에 대한 출석 확인을 위한 임시 객체
+    const tempCheckedIds = {...checkedIds};
+
+    for (const student of students) {
+      const isClose = await checkProximity(userLocation, student.location);
+      tempCheckedIds[student.id] = isClose;
+
+>>>>>>> 6a5ec255b3e00d339450966d675f64a943bf2955
       if (isClose) {
         await updateDoc(doc(firestore, 'users', student.id), {
           'attendance.checked': true,
@@ -174,10 +206,17 @@ export default function StudentList() {
         });
       }
     }
+<<<<<<< HEAD
     setCheckedIds(tempCheckedIds);
     setIsLoading(false);
   };
   
+=======
+
+    // 모든 학생 처리 후 상태 업데이트
+    setCheckedIds(tempCheckedIds);
+  };
+>>>>>>> 6a5ec255b3e00d339450966d675f64a943bf2955
 
   const checkProximity = (userLocation, studentLocation) => {
     const {latitude: userLat, longitude: userLng} = userLocation;
@@ -209,25 +248,40 @@ export default function StudentList() {
     return deg * (Math.PI / 180);
   };
 
+<<<<<<< HEAD
   const renderItem = ({ item }) => (
     <View style={styles.itemContainer}>
       <Image
         style={{ width: 67, height: 67 }}
+=======
+  const renderItem = ({item}) => (
+    <View style={styles.itemContainer}>
+      <Image
+        style={{width: 67, height: 67}}
+>>>>>>> 6a5ec255b3e00d339450966d675f64a943bf2955
         source={require('../../image/학생.png')}
       />
       <Text style={styles.itemText}>{item.name}</Text>
       <CheckBox
         checked={!!checkedIds[item.id]}
+<<<<<<< HEAD
         disabled={true}
         iconType="material-community"
         checkedIcon="checkbox-outline"
         uncheckedIcon="checkbox-blank-outline"
+=======
+        disabled={true} // 체크박스를 비활성화합니다.
+        iconType="material-community"
+        checkedIcon="checkbox-outline"
+        uncheckedIcon={'checkbox-blank-outline'}
+>>>>>>> 6a5ec255b3e00d339450966d675f64a943bf2955
       />
     </View>
   );
 
   return (
     <SafeAreaView style={styles.container}>
+<<<<<<< HEAD
       {isLoading ? (
         <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#0000ff" />
@@ -268,6 +322,39 @@ export default function StudentList() {
     </SafeAreaView>
   );
   
+=======
+      <View style={styles.headerContainer}>
+        <Image
+          style={styles.profileImage}
+          source={require('../../image/선생님.png')}
+        />
+        <View style={styles.userInfoContainer}>
+          <View style={{flexDirection: 'row'}}>
+            <Text style={styles.profileName}>
+              {teacherName || '선생님 이름'}
+            </Text>
+            <Text style={styles.profileName}> 선생님</Text>
+          </View>
+
+          <View style={{...styles.classInfoContainer, flexDirection: 'row'}}>
+            <Text style={styles.classInfoText}>{userClass}</Text>
+            <Text> 반</Text>
+          </View>
+          <TouchableOpacity
+            style={styles.attendanceButton}
+            onPress={handleAttendance}>
+            <Text style={styles.attendanceButtonText}>출석</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+      <FlatList
+        data={students}
+        renderItem={renderItem}
+        keyExtractor={item => item.id}
+      />
+    </SafeAreaView>
+  );
+>>>>>>> 6a5ec255b3e00d339450966d675f64a943bf2955
 }
 
 const styles = StyleSheet.create({
@@ -353,9 +440,12 @@ const styles = StyleSheet.create({
   itemText: {
     fontSize: 16,
   },
+<<<<<<< HEAD
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
+=======
+>>>>>>> 6a5ec255b3e00d339450966d675f64a943bf2955
 });

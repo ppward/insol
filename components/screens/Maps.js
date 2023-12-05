@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 import React, { useState, useEffect, useRef } from 'react';
+=======
+import React, {useState, useEffect, useRef} from 'react';
+>>>>>>> 6a5ec255b3e00d339450966d675f64a943bf2955
 import {
   View,
   Text,
@@ -8,11 +12,18 @@ import {
   TouchableOpacity,
   PermissionsAndroid,
   Platform,
+<<<<<<< HEAD
   ActivityIndicator,
 } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import Geolocation from '@react-native-community/geolocation';
 import { auth, firestore } from '../Firebase';
+=======
+} from 'react-native';
+import MapView, {Marker, PROVIDER_GOOGLE} from 'react-native-maps';
+import Geolocation from '@react-native-community/geolocation';
+import {auth, firestore} from '../Firebase';
+>>>>>>> 6a5ec255b3e00d339450966d675f64a943bf2955
 import {
   doc,
   getDoc,
@@ -24,6 +35,7 @@ import {
   getDocs,
 } from 'firebase/firestore';
 
+<<<<<<< HEAD
 const originalConsoleWarn = console.warn;
 
 console.warn = (message) => {
@@ -37,6 +49,8 @@ console.warn = (message) => {
   originalConsoleWarn(message);
 };
 
+=======
+>>>>>>> 6a5ec255b3e00d339450966d675f64a943bf2955
 const jobDetails = {
   선생님: {
     image: require('../../image/선생님.png'),
@@ -85,7 +99,11 @@ export default function Maps() {
   const [users, setUsers] = useState([]); // 사용자들의 위치 데이터
   const [filteredUsers, setFilteredUsers] = useState([]);
   const mapRef = useRef(null);
+<<<<<<< HEAD
   const [isLoading, setIsLoading] = useState(true);
+=======
+
+>>>>>>> 6a5ec255b3e00d339450966d675f64a943bf2955
   const startBluetoothScan = () => {
     bleManager.startDeviceScan(null, null, (error, device) => {
       if (error) {
@@ -126,12 +144,19 @@ export default function Maps() {
             latitudeDelta: 0.005,
             longitudeDelta: 0.005,
           });
+<<<<<<< HEAD
           setIsLoading(false);
+=======
+>>>>>>> 6a5ec255b3e00d339450966d675f64a943bf2955
         },
         error => {
           console.error(error);
         },
+<<<<<<< HEAD
         { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 },
+=======
+        {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000},
+>>>>>>> 6a5ec255b3e00d339450966d675f64a943bf2955
       );
     };
     const updateCurrentLocation = () => {
@@ -253,6 +278,7 @@ export default function Maps() {
 
     // 실시간 위치 업데이트 리스너 설정
     const subscribeToLocationUpdates = () => {
+<<<<<<< HEAD
       const uid = auth.currentUser.uid;
       const userDocRef = doc(firestore, 'users', uid);
       getDoc(userDocRef).then((userDocSnap) => {
@@ -302,6 +328,23 @@ export default function Maps() {
     const locationUpdateInterval = setInterval(updateCurrentLocation, 30000); // 600000ms = 10분
     requestLocationPermission();
     fetchUserJob()
+=======
+      const usersRef = collection(firestore, 'users');
+      const unsubscribe = onSnapshot(usersRef, querySnapshot => {
+        const updatedUsers = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setFilteredUsers(updatedUsers);
+      });
+
+      return unsubscribe;
+    };
+    const locationUpdateInterval = setInterval(updateCurrentLocation, 30000); // 600000ms = 10분
+    requestLocationPermission();
+    fetchUserJob();
+    fetchUsersLocation();
+>>>>>>> 6a5ec255b3e00d339450966d675f64a943bf2955
     fetchFilteredUsers();
     const locationUpdateUnsubscribe = subscribeToLocationUpdates();
 
@@ -313,6 +356,7 @@ export default function Maps() {
     };
   }, []);
 
+<<<<<<< HEAD
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
@@ -321,6 +365,15 @@ export default function Maps() {
     );
   }
   
+=======
+  if (!jobInfo || !currentPosition) {
+    return (
+      <View style={styles.container}>
+        <Text>Loading...</Text>
+      </View>
+    );
+  }
+>>>>>>> 6a5ec255b3e00d339450966d675f64a943bf2955
 
   return (
     <SafeAreaView style={styles.container}>
@@ -433,10 +486,13 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
   },
+<<<<<<< HEAD
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#B1A8EB', // 배경색은 기존 컨테이너 배경색과 동일하게 설정
   },
+=======
+>>>>>>> 6a5ec255b3e00d339450966d675f64a943bf2955
 });

@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 import React, { useState, useEffect } from 'react';
+=======
+import React, { useState } from 'react';
+>>>>>>> 6a5ec255b3e00d339450966d675f64a943bf2955
 import {
   StyleSheet,
   View,
@@ -11,12 +15,19 @@ import {
   Alert,
   Dimensions,
   TouchableWithoutFeedback,
+<<<<<<< HEAD
   ActivityIndicator
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { auth, firestore } from './Firebase';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { query, collection, where, getDoc, getDocs, setDoc, doc } from 'firebase/firestore';
+=======
+} from 'react-native';
+import { auth, firestore } from './Firebase';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { query, collection, where, getDocs ,setDoc, doc } from 'firebase/firestore';
+>>>>>>> 6a5ec255b3e00d339450966d675f64a943bf2955
 
 const SignUpScreen = ({ navigation }) => {
   const [modalVisible, setModalVisible] = useState(false);
@@ -26,6 +37,7 @@ const SignUpScreen = ({ navigation }) => {
   const [inputClass, setInputClass] = useState('');
   const [inputJob, setInputJob] = useState('');
   const [inputStudentEmail, setInputStudentEmail] = useState('');
+<<<<<<< HEAD
   const [kindergartens, setKindergartens] = useState([]); // 유치원 목록 상태
   const [selectedKindergarten, setSelectedKindergarten] = useState(); // 선택된 유치원 상태
   const [loading, setLoading] = useState(false);
@@ -86,10 +98,64 @@ const SignUpScreen = ({ navigation }) => {
       selectedKinderInfo = kindergartens.find(kinder => kinder.id === selectedKindergarten);
       if (!selectedKinderInfo) {
         Alert.alert('오류', '유치원을 선택해 주세요');
+=======
+
+  const handleSignUp = async () => {
+    let studentClass = '';
+    if (!inputEmail.includes('@')) {
+      Alert.alert('Error', 'Invalid email format');
+      return;
+    }
+    if (inputPassword.length < 6) {
+      Alert.alert('Error', 'Password must be at least 6 characters');
+      return;
+    }
+    if (inputName.trim().length === 0) {
+      Alert.alert('Error', 'Name is required');
+      return;
+    }
+    if (inputJob !== '학부모' && inputClass.trim().length === 0) {
+      Alert.alert('Error', 'Class name is required');
+      return;
+    }
+
+    if (inputJob === '학부모') {
+      if (!inputStudentEmail.includes('@')) {
+        Alert.alert('Error', 'Invalid student email format');
+        return;
+      }
+  
+      try {
+        const studentsQuery = query(
+          collection(firestore, 'users'),
+          where('email', '==', inputStudentEmail),
+          where('job', '==', '학생'),
+        );
+        const querySnapshot = await getDocs(studentsQuery);
+  
+        if (querySnapshot.empty) {
+          Alert.alert('Error', 'No student account found with the provided email');
+          return;
+        } else {
+          const studentDoc = querySnapshot.docs[0];
+          const studentData = studentDoc.data();
+  
+          if (studentData.parent) {
+            Alert.alert('Error', 'A parent is already registered for this student');
+            return;
+          } else {
+            studentClass = studentData.class;
+            await setDoc(studentDoc.ref, { ...studentData, parent: inputEmail });
+          }
+        }
+      } catch (error) {
+        Alert.alert('Error', 'Failed to verify student email');
+>>>>>>> 6a5ec255b3e00d339450966d675f64a943bf2955
         return;
       }
     }
 
+<<<<<<< HEAD
     // Firebase 인증을 사용하여 사용자 등록
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, inputEmail, inputPassword);
@@ -124,6 +190,25 @@ const SignUpScreen = ({ navigation }) => {
       navigation.navigate('Intro'); // 성공 시 소개 화면으로 이동
     } catch (error) {
       Alert.alert('오류', error.message);
+=======
+    try {
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        inputEmail,
+        inputPassword,
+      );
+      await setDoc(doc(firestore, 'users', userCredential.user.uid), {
+        email: inputEmail,
+        class: inputJob === '학부모' ? studentClass : inputClass,
+        name: inputName,
+        job: inputJob,
+        studentEmail: inputJob === '학부모' ? inputStudentEmail : null,
+      });
+      Alert.alert('Success', 'User registered successfully');
+      navigation.navigate('Intro');
+    } catch (error) {
+      Alert.alert('Error', error.message);
+>>>>>>> 6a5ec255b3e00d339450966d675f64a943bf2955
     }
   };
 
@@ -132,6 +217,7 @@ const SignUpScreen = ({ navigation }) => {
     setModalVisible(true);
   };
 
+<<<<<<< HEAD
   const renderModalContent = () => {
     return (
       <View style={styles.modalView}>
@@ -140,10 +226,57 @@ const SignUpScreen = ({ navigation }) => {
           onChangeText={setInputEmail}
           value={inputEmail}
           placeholder="이메일"
+=======
+  const renderModalContent = () => (
+    <View style={styles.modalView}>
+      <TextInput
+        style={styles.input}
+        onChangeText={setInputEmail}
+        value={inputEmail}
+        placeholder="이메일"
+        placeholderTextColor="#C7C7CD"
+        keyboardType="email-address"
+        autoCapitalize="none"
+      />
+      <TextInput
+        style={styles.input}
+        onChangeText={setInputPassword}
+        value={inputPassword}
+        placeholder="비밀번호"
+        placeholderTextColor="#C7C7CD"
+        secureTextEntry
+        autoCapitalize="none"
+      />
+      <TextInput
+        style={styles.input}
+        onChangeText={setInputName}
+        value={inputName}
+        placeholder="이름"
+        placeholderTextColor="#C7C7CD"
+        autoCapitalize="none"
+      />
+      {inputJob !== '학부모' && (
+      <TextInput
+        style={styles.input}
+        onChangeText={setInputClass}
+        value={inputClass}
+        placeholder="반 이름"
+        placeholderTextColor="#C7C7CD"
+        autoCapitalize="none"
+      />
+    )}
+      {inputJob === '학부모' && (
+        <TextInput
+          style={styles.input}
+          onChangeText={setInputStudentEmail}
+          value={inputStudentEmail}
+          placeholder="학생 이메일"
+>>>>>>> 6a5ec255b3e00d339450966d675f64a943bf2955
           placeholderTextColor="#C7C7CD"
           keyboardType="email-address"
           autoCapitalize="none"
         />
+<<<<<<< HEAD
         <TextInput
           style={styles.input}
           onChangeText={setInputPassword}
@@ -213,6 +346,18 @@ const SignUpScreen = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={{ ...styles.half, alignItems: 'flex-end' }}>
+=======
+      )}
+      <TouchableOpacity style={styles.button} onPress={handleSignUp}>
+        <Text style={styles.buttonText}>회원가입</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <View style={{...styles.half, alignItems: 'flex-end'}}>
+>>>>>>> 6a5ec255b3e00d339450966d675f64a943bf2955
         <View style={styles.quadrant}>
           <TouchableOpacity
             style={styles.signupButton}
@@ -240,7 +385,11 @@ const SignUpScreen = ({ navigation }) => {
         </View>
       </View>
 
+<<<<<<< HEAD
       <View style={{ ...styles.half, alignItems: 'flex-start' }}>
+=======
+      <View style={{...styles.half, alignItems: 'flex-start'}}>
+>>>>>>> 6a5ec255b3e00d339450966d675f64a943bf2955
         <View style={styles.quadrant}>
           <TouchableOpacity
             style={styles.signupButton}
@@ -267,8 +416,12 @@ const SignUpScreen = ({ navigation }) => {
         animationType="slide"
         transparent={true}
         visible={modalVisible}
+<<<<<<< HEAD
         onRequestClose={() => setModalVisible(!modalVisible)}
       >
+=======
+        onRequestClose={() => setModalVisible(!modalVisible)}>
+>>>>>>> 6a5ec255b3e00d339450966d675f64a943bf2955
         <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
           <View style={styles.modalOverlay}>
             {renderModalContent()}
@@ -355,6 +508,7 @@ const styles = StyleSheet.create({
     shadowRadius: 2.22,
     elevation: 3,
   },
+<<<<<<< HEAD
   loading: {
     flex: 1,
     justifyContent: 'center',
@@ -366,6 +520,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF', // 흰색 배경
     color: '#000000', // 검은색 글자
   },
+=======
+>>>>>>> 6a5ec255b3e00d339450966d675f64a943bf2955
 });
 
 export default SignUpScreen;
