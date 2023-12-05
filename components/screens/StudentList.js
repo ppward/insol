@@ -33,7 +33,6 @@ export default function StudentList() {
 
   const requestLocationPermission = async () => {
     if (Platform.OS === 'ios') {
-      Geolocation.requestAuthorization('whenInUse');
       return true;
     }
 

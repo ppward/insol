@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import {
   View,
   Text,
@@ -8,11 +8,10 @@ import {
   TouchableOpacity,
   PermissionsAndroid,
   Platform,
-  ActivityIndicator,
 } from 'react-native';
-import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
+import MapView, {Marker, PROVIDER_GOOGLE} from 'react-native-maps';
 import Geolocation from '@react-native-community/geolocation';
-import { auth, firestore } from '../Firebase';
+import {auth, firestore} from '../Firebase';
 import {
   doc,
   getDoc,
@@ -23,19 +22,6 @@ import {
   onSnapshot,
   getDocs,
 } from 'firebase/firestore';
-
-const originalConsoleWarn = console.warn;
-
-console.warn = (message) => {
-  if (message.indexOf('Warning: This synthetic event is reused for performance reasons.') !== -1 ||
-      message.indexOf('Possible Unhandled Promise Rejection') !== -1 ||
-      message.indexOf('Warning: This synthetic event is reused for performance reasons.') !== -1) {
-    // 이 경고 메시지를 무시합니다.
-    return;
-  }
-
-  originalConsoleWarn(message);
-};
 
 const jobDetails = {
   선생님: {
@@ -85,7 +71,7 @@ export default function Maps() {
   const [users, setUsers] = useState([]); // 사용자들의 위치 데이터
   const [filteredUsers, setFilteredUsers] = useState([]);
   const mapRef = useRef(null);
-  const [isLoading, setIsLoading] = useState(true);
+
   const startBluetoothScan = () => {
     bleManager.startDeviceScan(null, null, (error, device) => {
       if (error) {
@@ -126,12 +112,11 @@ export default function Maps() {
             latitudeDelta: 0.005,
             longitudeDelta: 0.005,
           });
-          setIsLoading(false);
         },
         error => {
           console.error(error);
         },
-        { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 },
+        {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000},
       );
     };
     const updateCurrentLocation = () => {
@@ -313,14 +298,13 @@ export default function Maps() {
     };
   }, []);
 
-  if (isLoading) {
+  if (!jobInfo || !currentPosition) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#0000ff" />
+      <View style={styles.container}>
+        <Text>Loading...</Text>
       </View>
     );
   }
-  
 
   return (
     <SafeAreaView style={styles.container}>
@@ -432,11 +416,5 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#FFFFFF',
     fontSize: 16,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#B1A8EB', // 배경색은 기존 컨테이너 배경색과 동일하게 설정
   },
 });

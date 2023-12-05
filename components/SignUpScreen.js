@@ -106,10 +106,15 @@ const SignUpScreen = ({ navigation }) => {
       // 사용자가 학생인 경우 선택한 유치원 정보 추가
       if (inputJob === '학생' && selectedKinderInfo) {
         console.log('-----------------------------------------------------')
+        const seoulStationLocation = {
+          latitude: 37.5563,
+          longitude: 126.9723
+        };
+        userData.location = seoulStationLocation;
         userData.kindergarten = selectedKinderInfo.name;
         // 유치원의 위치 정보 추가
         // 데이터 구조에 맞게 location 필드가 객체 형태로 저장되어야 합니다.
-        userData.location = {
+        userData.kindergartenlocation = {
           latitude: selectedKinderInfo.location.latitude,
           longitude: selectedKinderInfo.location.longitude
         };
