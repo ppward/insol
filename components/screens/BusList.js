@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   View,
   Text,
@@ -10,7 +10,7 @@ import {
   PermissionsAndroid,
   Platform,
 } from 'react-native';
-import { auth, firestore } from '../Firebase';
+import {auth, firestore} from '../Firebase';
 import {
   collection,
   query,
@@ -20,19 +20,18 @@ import {
   getDoc,
   updateDoc,
 } from 'firebase/firestore';
-import { CheckBox } from '@rneui/themed';
+import {CheckBox} from '@rneui/themed';
 import Geolocation from '@react-native-community/geolocation';
-import { ActivityIndicator } from 'react-native';
+import {ActivityIndicator} from 'react-native';
 
 export default function BusList() {
-    const [students, setStudents] = useState([]);
-    const [busAttendance, setBusAttendance] = useState({});
-    const [userClass, setUserClass] = useState('');
-    const [teacherName, setTeacherName] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
+  const [students, setStudents] = useState([]);
+  const [busAttendance, setBusAttendance] = useState({});
+  const [userClass, setUserClass] = useState('');
+  const [teacherName, setTeacherName] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const requestLocationPermission = async () => {
     if (Platform.OS === 'ios') {
-      Geolocation.requestAuthorization('whenInUse');
       return true;
     }
 
@@ -68,7 +67,7 @@ export default function BusList() {
           console.error('Error getting current location:', error);
           reject(null);
         },
-        { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 },
+        {enableHighAccuracy: true, timeout: 20000, maximumAge: 1000},
       );
     });
   };
@@ -122,7 +121,8 @@ export default function BusList() {
             let isChecked = false;
             if (userJob === '버스기사') {
               isChecked = studentData.busAttendance?.checked || false;
-              const lastCheckedDate = studentData.busAttendance?.timestamp?.split('T')[0];
+              const lastCheckedDate =
+                studentData.busAttendance?.timestamp?.split('T')[0];
               if (lastCheckedDate && lastCheckedDate !== currentDate) {
                 isChecked = false;
                 await updateDoc(doc(firestore, 'users', studentId), {
@@ -132,7 +132,11 @@ export default function BusList() {
               }
             }
 
-            fetchedStudents.push({ id: studentId, ...studentData, checked: isChecked });
+            fetchedStudents.push({
+              id: studentId,
+              ...studentData,
+              checked: isChecked,
+            });
             fetchedBusAttendance[studentId] = isChecked;
           }
 
@@ -151,18 +155,18 @@ export default function BusList() {
     setIsLoading(true);
     const userLocation = await getCurrentUserLocation();
     if (!userLocation) {
-        setIsLoading(false); // 로딩 종료
-        return;
-      }
-  
+      setIsLoading(false); // 로딩 종료
+      return;
+    }
+
     // 모든 학생에 대한 버스 출석 확인을 위한 임시 객체
-    const newBusAttendance = { ...busAttendance };
-  
+    const newBusAttendance = {...busAttendance};
+
     // 각 학생에 대한 처리
     for (const student of students) {
       const isClose = await checkProximity(userLocation, student.location);
       newBusAttendance[student.id] = isClose;
-  
+
       if (isClose) {
         await updateDoc(doc(firestore, 'users', student.id), {
           'busAttendance.checked': true,
@@ -172,12 +176,11 @@ export default function BusList() {
         newBusAttendance[student.id] = false;
       }
     }
-  
+
     // 모든 학생 처리 후 상태 업데이트
     setBusAttendance(newBusAttendance);
     setIsLoading(false);
   };
-  
 
   const checkProximity = (userLocation, studentLocation) => {
     const {latitude: userLat, longitude: userLng} = userLocation;
@@ -209,10 +212,10 @@ export default function BusList() {
     return deg * (Math.PI / 180);
   };
 
-  const renderItem = ({ item }) => (
+  const renderItem = ({item}) => (
     <View style={styles.itemContainer}>
       <Image
-        style={{ width: 67, height: 67 }}
+        style={{width: 67, height: 67}}
         source={require('../../image/학생.png')}
       />
       <Text style={styles.itemText}>{item.name}</Text>
@@ -230,9 +233,9 @@ export default function BusList() {
     <SafeAreaView style={styles.container}>
       {isLoading ? (
         <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#0000ff" />
-      </View>
-    ) : (
+          <ActivityIndicator size="large" color="#0000ff" />
+        </View>
+      ) : (
         <>
           <View style={styles.headerContainer}>
             <Image
@@ -246,8 +249,9 @@ export default function BusList() {
                 </Text>
                 <Text style={styles.profileName}> 버스기사 </Text>
               </View>
-  
-              <View style={{...styles.classInfoContainer, flexDirection: 'row'}}>
+
+              <View
+                style={{...styles.classInfoContainer, flexDirection: 'row'}}>
                 <Text style={styles.classInfoText}>{userClass}</Text>
                 <Text> 반</Text>
               </View>
@@ -267,7 +271,6 @@ export default function BusList() {
       )}
     </SafeAreaView>
   );
-  
 }
 
 const styles = StyleSheet.create({

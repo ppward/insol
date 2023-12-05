@@ -85,53 +85,39 @@ const SignUpScreen = ({navigation}) => {
       Alert.alert('오류', '이름은 필수 항목입니다');
       return;
     }
-<<<<<<< HEAD
-
-    // 특정 역할에 대한 추가 유효성 검사
-    if (inputJob === '학부모' && !inputStudentEmail.includes('@')) {
-      Alert.alert('오류', '학생 이메일 형식이 잘못되었습니다');
-      return;
-    }
-
-    // 이름을 기준으로 선택된 유치원 객체 찾기
-    let selectedKinderInfo = null;
-    if (inputJob === '학생' && selectedKindergarten) {
-      selectedKinderInfo = kindergartens.find(
-        kinder => kinder.id === selectedKindergarten,
-      );
-      if (!selectedKinderInfo) {
-        Alert.alert('오류', '유치원을 선택해 주세요');
-=======
-  
+    let studentClass = null;
     // 학부모 회원가입 처리
     if (inputJob === '학부모') {
       if (!inputStudentEmail.includes('@')) {
         Alert.alert('오류', '학생 이메일 형식이 잘못되었습니다');
         return;
       }
-  
+
       // 입력받은 학생 이메일로 Firestore에서 학생 문서 조회
-      const studentQuery = query(collection(firestore, 'users'), where('email', '==', inputStudentEmail));
+      const studentQuery = query(
+        collection(firestore, 'users'),
+        where('email', '==', inputStudentEmail),
+      );
       const studentQuerySnapshot = await getDocs(studentQuery);
-  
+
       if (!studentQuerySnapshot.empty) {
         const studentDoc = studentQuerySnapshot.docs[0]; // 첫 번째 문서를 선택
-        const studentData = studentDoc.data();
-  
+        studentClass = studentDoc.data().class; // 학생의 class 정보 저장
+
         // 이미 parent 필드가 존재하면 회원가입 중단
-        if (studentData.parent) {
+        if (studentDoc.data().parent) {
           Alert.alert('오류', '이미 다른 학부모가 등록된 학생입니다.');
           return;
         }
-  
+
         // 학생 문서에 학부모 이메일 저장
-        await setDoc(studentDoc.ref, { parent: inputEmail }, { merge: true });
+        await setDoc(studentDoc.ref, {parent: inputEmail}, {merge: true});
       } else {
         Alert.alert('오류', '등록된 학생의 이메일이 존재하지 않습니다.');
         return;
       }
     }
-  
+
     // Firebase 인증을 사용하여 사용자 계정 생성
     try {
       const userCredential = await createUserWithEmailAndPassword(
@@ -145,14 +131,16 @@ const SignUpScreen = ({navigation}) => {
         email: inputEmail,
         name: inputName,
         job: inputJob,
+        class: inputClass,
+        class: inputJob === '학부모' ? studentClass : inputClass,
         // 학부모의 경우 studentEmail을 저장하고, 그렇지 않은 경우 null을 저장
         studentEmail: inputJob === '학부모' ? inputStudentEmail : null,
         // 다른 필드 추가 가능
       };
-  
+
       // Firestore에 사용자 문서 생성
       await setDoc(doc(firestore, 'users', userCredential.user.uid), userData);
-  
+
       Alert.alert('성공', '회원가입에 성공했습니다.');
       navigation.navigate('Intro'); // 성공적으로 등록 후 이동할 화면
     } catch (error) {

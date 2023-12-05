@@ -134,7 +134,6 @@ export default function Maps() {
       }
     }
   };
-
   useEffect(() => {
     // 위치 권한 요청 및 현재 위치 설정
     const requestLocationPermission = async () => {
@@ -175,23 +174,21 @@ export default function Maps() {
 
     // 현재 위치 실시간 업데이트
     const updateCurrentLocation = async () => {
-      if (jobInfo && jobInfo.text === '학생') {
-        Geolocation.getCurrentPosition(
-          async position => {
-            const {latitude, longitude} = position.coords;
-            updateLocationInFirebase(latitude, longitude);
+      Geolocation.getCurrentPosition(
+        async position => {
+          const {latitude, longitude} = position.coords;
+          updateLocationInFirebase(latitude, longitude);
 
-            // 현재 사용자의 UID를 가져옵니다.
-            const uid = auth.currentUser.uid;
-            // 현재 위치와 Firebase의 kindergartenlocation을 비교합니다.
-            await updateInGartenStatus(latitude, longitude, uid);
-          },
-          error => {
-            console.error('Location update error:', error);
-          },
-          {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000},
-        );
-      }
+          // 현재 사용자의 UID를 가져옵니다.
+          const uid = auth.currentUser.uid;
+          // 현재 위치와 Firebase의 kindergartenlocation을 비교합니다.
+          await updateInGartenStatus(latitude, longitude, uid);
+        },
+        error => {
+          console.error('Location update error:', error);
+        },
+        {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000},
+      );
     };
     const locationUpdateInterval1 = setInterval(updateCurrentLocation, 600000); // 10분마다 위치 업데이트
     // 사용자 직업 정보 가져오기
