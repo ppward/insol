@@ -23,7 +23,29 @@ import {
   getDocs,
 } from 'firebase/firestore';
 
+<<<<<<< HEAD
 // 직업별 이미지와 텍스트 정보
+=======
+const originalConsoleWarn = console.warn;
+
+console.warn = message => {
+  if (
+    message.indexOf(
+      'Warning: This synthetic event is reused for performance reasons.',
+    ) !== -1 ||
+    message.indexOf('Possible Unhandled Promise Rejection') !== -1 ||
+    message.indexOf(
+      'Warning: This synthetic event is reused for performance reasons.',
+    ) !== -1
+  ) {
+    // 이 경고 메시지를 무시합니다.
+    return;
+  }
+
+  originalConsoleWarn(message);
+};
+
+>>>>>>> 94a67a36a8924a39398bfd45a847a61a5dc9a7e7
 const jobDetails = {
   선생님: {
     image: require('../../image/선생님.png'),
@@ -334,7 +356,11 @@ export default function Maps() {
       });
     };
 
+<<<<<<< HEAD
     // 컴포넌트 마운트 시 실행되는 코드
+=======
+    const locationUpdateInterval = setInterval(updateCurrentLocation, 30000); // 600000ms = 10분
+>>>>>>> 94a67a36a8924a39398bfd45a847a61a5dc9a7e7
     requestLocationPermission();
     fetchUserJob();
     fetchFilteredUsers();

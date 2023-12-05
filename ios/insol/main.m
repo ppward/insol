@@ -8,7 +8,4 @@ int main(int argc, char *argv[])
     return UIApplicationMain(argc, argv, nil, NSStringFromClass([AppDelegate class]));
   }
 } 
-<<<<<<< HEAD
-=======
 
->>>>>>> 6a5ec255b3e00d339450966d675f64a943bf2955
