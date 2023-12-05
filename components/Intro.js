@@ -29,11 +29,7 @@ const LoginModalContent = ({
 }) => {
   return (
     <View style={styles.modalContentContainer}>
-<<<<<<< HEAD
-      <View style={{width: '80%'}}>
-=======
       <View style={{width : '80%'}}>
->>>>>>> ecb57286733129cabc75569ef1ca2da0e90ade61
         <TextInput
           style={{...styles.input, backgroundColor: '#f5f5f5'}}
           onChangeText={onEmailChange}
@@ -43,11 +39,7 @@ const LoginModalContent = ({
           autoCapitalize="none"
         />
       </View>
-<<<<<<< HEAD
-      <View style={{width: '80%'}}>
-=======
       <View style={{width : '80%'}}>
->>>>>>> ecb57286733129cabc75569ef1ca2da0e90ade61
         <TextInput
           style={{...styles.input, backgroundColor: '#f5f5f5'}}
           onChangeText={onPasswordChange}
