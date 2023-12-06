@@ -10,6 +10,8 @@ import {
   TextInput,
   Alert,
   TouchableWithoutFeedback,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import {Modalize} from 'react-native-modalize';
@@ -28,10 +30,18 @@ const LoginModalContent = ({
   password,
 }) => {
   return (
-    <View style={styles.modalContentContainer}>
-      <View style={{width : '80%'}}>
+    <KeyboardAvoidingView
+      style={styles.modalContentContainer}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <View
+        style={{
+          ...styles.input,
+          width: '80%',
+          height: 50,
+          backgroundColor: 'grey',
+        }}>
         <TextInput
-          style={{...styles.input, backgroundColor: '#f5f5f5'}}
+          style={{flex: 1}}
           onChangeText={onEmailChange}
           value={email}
           placeholder="이메일"
@@ -39,9 +49,15 @@ const LoginModalContent = ({
           autoCapitalize="none"
         />
       </View>
-      <View style={{width : '80%'}}>
+      <View
+        style={{
+          ...styles.input,
+          width: '80%',
+          height: 50,
+          backgroundColor: 'grey',
+        }}>
         <TextInput
-          style={{...styles.input, backgroundColor: '#f5f5f5'}}
+          style={{flex: 1}}
           onChangeText={onPasswordChange}
           value={password}
           placeholder="비밀번호"
@@ -51,7 +67,7 @@ const LoginModalContent = ({
       <TouchableOpacity style={styles.modalButton} onPress={onLogin}>
         <Text style={styles.modalButtonText}>로그인</Text>
       </TouchableOpacity>
-    </View>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -173,7 +189,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   input: {
-    height: 50,
     borderWidth: 1,
     borderColor: 'gray',
     borderRadius: 5,

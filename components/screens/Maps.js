@@ -8,10 +8,11 @@ import {
   TouchableOpacity,
   PermissionsAndroid,
   Platform,
+  Alert,
 } from 'react-native';
 import MapView, {Marker, PROVIDER_GOOGLE} from 'react-native-maps';
 import Geolocation from '@react-native-community/geolocation';
-import {auth, firestore} from '../Firebase';
+import {auth, firestore, signOut} from '../Firebase';
 import {
   doc,
   getDoc,
@@ -22,6 +23,8 @@ import {
   onSnapshot,
   getDocs,
 } from 'firebase/firestore';
+import {useNavigation} from '@react-navigation/native';
+import {CheckBox} from '@rneui/themed';
 
 // 직업별 이미지와 텍스트 정보
 const jobDetails = {
@@ -69,12 +72,42 @@ const updateLocationInFirebase = async (latitude, longitude) => {
 
 // 메인 컴포넌트
 export default function Maps() {
+  const [currentUID, setCurrentUID] = useState('');
   const [jobInfo, setJobInfo] = useState(null); // 사용자 직업 정보
   const [currentPosition, setCurrentPosition] = useState(null); // 현재 위치
-  const [users, setUsers] = useState([]); // 모든 사용자 위치 데이터
+  const [schedules, setSchedules] = useState([]); // 모든 사용자 위치 데이터
   const [filteredUsers, setFilteredUsers] = useState([]); // 필터링된 사용자 위치 데이터
   const mapRef = useRef(null);
-
+  const [classData, setClassData] = useState('');
+  const [attend, setAttend] = useState(false);
+  const [studentEmail, setStudentEmail] = useState('');
+  const navigation = useNavigation();
+  const handleLogout = () => {
+    // Display a confirmation dialog
+    Alert.alert(
+      'Log Out', // Alert Title
+      'Are you sure you want to log out?', // Alert Message
+      [
+        {
+          text: 'Cancel',
+          onPress: () => console.log('Cancel Pressed'),
+          style: 'cancel',
+        },
+        {
+          text: 'Yes',
+          onPress: async () => {
+            try {
+              await auth.signOut();
+              navigation.navigate('Intro');
+            } catch (error) {
+              console.error('Error signing out: ', error);
+            }
+          },
+        },
+      ],
+      {cancelable: false}, // This prevents the alert from being dismissed by tapping outside of it
+    );
+  };
   // 헤더 버튼 클릭 핸들러
   const onHeaderButtonPress = () => {
     console.log('Header Button Pressed');
@@ -134,6 +167,98 @@ export default function Maps() {
       }
     }
   };
+  useEffect(() => {
+    //학생 출석체크
+    const uid = auth.currentUser.uid;
+    const userDocRef = doc(firestore, 'users', uid);
+    setCurrentUID(uid);
+
+    const unsubscribe = onSnapshot(userDocRef, doc => {
+      if (doc.exists()) {
+        const data = doc.data();
+
+        if (data.job === '학생') {
+          if (
+            // Check if the 'checked' field exists and if it is true
+            data.attendance.hasOwnProperty('checked') &&
+            data.attendance.checked === true
+          ) {
+            setAttend(true); // Update your state to true
+            // Execute any additional logic when 'checked' is true
+            // 테스트해보기
+          } else {
+            // Handle the case when 'checked' is not true or not present
+            setAttend(false);
+          }
+        } else if (data.job === '부모님') {
+          setStudentEmail(data.studentEmail);
+        }
+      }
+    });
+
+    // This will unsubscribe from the document when the component unmounts
+    return () => unsubscribe();
+  }, [currentUID]);
+  useEffect(() => {
+    // 유치원 도착알림
+    if (studentEmail.length !== 0) {
+      // Fetch the student's document using the email
+      const studentQuery = query(
+        collection(firestore, 'users'),
+        where('email', '==', studentEmail),
+      );
+
+      // Listen for changes on the student's document
+      const unsubscribe = onSnapshot(studentQuery, querySnapshot => {
+        querySnapshot.forEach(doc => {
+          const studentData = doc.data();
+          // When 'ingarten' becomes true, show an alert
+          if (studentData.ingarten === true) {
+            Alert.alert('알림', '아이가 유치원에 무사히 도착했습니다.');
+          }
+        });
+      });
+
+      // Clean up the listener when the component unmounts
+      return () => unsubscribe();
+    }
+  }, [studentEmail]);
+  useEffect(() => {
+    const fetchSchedules = async () => {
+      if (classData !== '') {
+        try {
+          const q = query(
+            collection(firestore, 'schedules'),
+            where('class', '==', classData),
+          );
+          const querySnapshot = await getDocs(q);
+
+          // Check if the querySnapshot has any documents
+          if (querySnapshot.size === 0) {
+            // If no documents are found, set schedules to an empty array
+            setSchedules([]);
+          } else {
+            // If documents are found, map over them and set schedules
+            const schedulesData = querySnapshot.docs.map(doc => ({
+              id: doc.id,
+              ...doc.data(),
+            }));
+            setSchedules(schedulesData);
+          }
+        } catch (error) {
+          console.error('Error occurred while retrieving schedule: ', error);
+          setSchedules([]); // Also set to empty if there is an error fetching schedules
+        }
+      }
+    };
+
+    if (classData && classData.trim().length > 0) {
+      fetchSchedules();
+    }
+
+    console.log('반이름:', classData);
+    console.log('Map schedule', schedules);
+  }, [classData]);
   useEffect(() => {
     // 위치 권한 요청 및 현재 위치 설정
     const requestLocationPermission = async () => {
@@ -201,6 +326,7 @@ export default function Maps() {
         if (userDocSnap.exists()) {
           const job = userDocSnap.data().job;
           setJobInfo(jobDetails[job]);
+          setClassData(userDocSnap.data.class);
 
           // 학생인 경우에만 위치 업데이트 인터벌을 설정합니다.
           if (job === '학생') {
@@ -230,7 +356,7 @@ export default function Maps() {
             class: userClass,
           } = userDocSnap.data();
           let usersQuery;
-
+          setClassData(userClass);
           if (['선생님', '버스기사'].includes(userJob)) {
             usersQuery = query(
               collection(firestore, 'users'),
@@ -239,6 +365,7 @@ export default function Maps() {
             );
           } else if (userJob === '학부모') {
             // 자녀(학생) 조회
+            setStudentEmail(userDocSnap.data().studentEmail);
             const studentsQuery = query(
               collection(firestore, 'users'),
               where('parent', '==', userEmail),
@@ -262,10 +389,7 @@ export default function Maps() {
             }));
 
             // 자녀와 선생님 정보를 상태에 저장
-            setFilteredUsers([
-              ...studentsSnapshot.docs.map(doc => doc.data()),
-              ...teachersData,
-            ]);
+            setFilteredUsers([...studentsSnapshot.docs.map(doc => doc.data())]);
           } else if (userJob === '학생') {
             usersQuery = query(
               collection(firestore, 'users'),
@@ -373,11 +497,21 @@ export default function Maps() {
         <View style={styles.profileContainer}>
           <Image source={jobInfo.image} style={styles.profilePic} />
           <Text style={styles.headerText}>{jobInfo.text}</Text>
+          {jobInfo && jobInfo.text === '학생' && (
+            <CheckBox
+              checked={attend}
+              disabled={true}
+              iconType="material-community"
+              checkedIcon="checkbox-outline"
+              uncheckedIcon="checkbox-blank-outline"
+            />
+          )}
         </View>
+
         <TouchableOpacity
           style={styles.headerButton}
-          onPress={onHeaderButtonPress}>
-          <Text style={styles.headerButtonText}>버튼</Text>
+          onPress={() => handleLogout()}>
+          <Text style={styles.headerButtonText}>로그아웃</Text>
         </TouchableOpacity>
       </View>
       <View style={styles.mapContainer}>
@@ -397,10 +531,42 @@ export default function Maps() {
                     longitude: user.location.longitude,
                   }}
                   title={user.name || 'Unknown'}
+                  image={
+                    jobInfo && jobInfo.text === '학생'
+                      ? require('../../image/markerImage/teacher.png')
+                      : require('../../image/markerImage/boy.png')
+                  }
                 />
               ),
           )}
+          {schedules.map((item, index) => {
+            return (
+              item.location && (
+                <Marker
+                  key={index}
+                  coordinate={{
+                    latitude: item.location.latitude,
+                    longitude: item.location.longitude,
+                  }}
+                  title={item.address || 'Unknown'}
+                  image={require('../../image/markerImage/calendar.png')}
+                />
+              )
+            );
+          })}
         </MapView>
+        {currentPosition && (
+          <TouchableOpacity
+            style={styles.currentPositionButton}
+            onPress={() => {
+              mapRef.current.animateToRegion(currentPosition, 1000);
+            }}>
+            <Image
+              style={{width: 28, height: 28, tintColor: '#fff'}}
+              source={require('../../assets/target.png')}
+            />
+          </TouchableOpacity>
+        )}
       </View>
     </SafeAreaView>
   );
@@ -462,6 +628,19 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
   },
   button: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    backgroundColor: '#9933FF',
+    padding: 10,
+    borderRadius: 20,
+    elevation: 3,
+    shadowOpacity: 0.5,
+    shadowRadius: 5,
+    shadowColor: 'black',
+    shadowOffset: {height: 3, width: 3},
+  },
+  currentPositionButton: {
     position: 'absolute',
     bottom: 20,
     right: 20,

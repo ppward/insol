@@ -11,7 +11,9 @@ import {
   Alert,
   Dimensions,
   TouchableWithoutFeedback,
+  KeyboardAvoidingView,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
 import {Picker} from '@react-native-picker/picker';
 import {auth, firestore} from './Firebase';
@@ -103,11 +105,7 @@ const SignUpScreen = ({navigation}) => {
       if (!studentQuerySnapshot.empty) {
         const studentDoc = studentQuerySnapshot.docs[0]; // 첫 번째 문서를 선택
         studentClass = studentDoc.data().class; // 학생의 class 정보 저장
-<<<<<<< HEAD
 
-=======
-  
->>>>>>> ecb57286733129cabc75569ef1ca2da0e90ade61
         // 이미 parent 필드가 존재하면 회원가입 중단
         if (studentDoc.data().parent) {
           Alert.alert('오류', '이미 다른 학부모가 등록된 학생입니다.');
@@ -163,7 +161,9 @@ const SignUpScreen = ({navigation}) => {
 
   const renderModalContent = () => {
     return (
-      <View style={styles.modalView}>
+      <KeyboardAvoidingView
+        style={styles.modalView}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <TextInput
           style={styles.input}
           onChangeText={setInputEmail}
@@ -246,7 +246,7 @@ const SignUpScreen = ({navigation}) => {
           onPress={handleSignUp}>
           <Text style={styles.buttonText}>회원가입</Text>
         </TouchableOpacity>
-      </View>
+      </KeyboardAvoidingView>
     );
   };
 
