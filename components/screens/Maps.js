@@ -109,10 +109,8 @@ export default function Maps() {
     );
   };
   // 헤더 버튼 클릭 핸들러
-  const onHeaderButtonPress = () => {
-    console.log('Header Button Pressed');
-    startBluetoothScan();
-  };
+  luetoothScan();
+
   function getDistanceFromLatLonInM(lat1, lon1, lat2, lon2) {
     const R = 6371; // 지구의 반지름 (km)
     const dLat = deg2rad(lat2 - lat1);
