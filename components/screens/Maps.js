@@ -138,10 +138,13 @@ export default function Maps() {
     uid,
   ) => {
     // jobInfo 상태를 확인하여 '학생'인 경우에만 함수 실행
+    console.log('jobinfoText=', jobInfo.text);
+    console.log('jobinfo=', jobInfo);
+
     if (jobInfo && jobInfo.text === '학생') {
       const userDocRef = doc(firestore, 'users', uid);
       const userDocSnap = await getDoc(userDocRef);
-
+      console.log('----=-=-=-=-=');
       if (userDocSnap.exists()) {
         const {kindergartenlocation} = userDocSnap.data();
         if (
@@ -166,6 +169,7 @@ export default function Maps() {
         console.error('User document does not exist');
       }
     }
+    console.log('.........');
   };
   useEffect(() => {
     //학생 출석체크
@@ -288,7 +292,7 @@ export default function Maps() {
           // 현재 사용자의 UID를 가져옵니다.
           const uid = auth.currentUser.uid;
           // 현재 위치와 Firebase의 kindergartenlocation을 비교합니다.
-          await updateInGartenStatus(latitude, longitude, uid); // 위치 업데이트 함수를 호출합니다.
+          updateInGartenStatus(latitude, longitude, uid); // 위치 업데이트 함수를 호출합니다.
         },
         error => {
           console.error(error);
@@ -302,12 +306,12 @@ export default function Maps() {
       Geolocation.getCurrentPosition(
         async position => {
           const {latitude, longitude} = position.coords;
-          updateLocationInFirebase(latitude, longitude);
+          updateLocationInFirebase(latitude, longitude); // <--- 실행 됌
 
           // 현재 사용자의 UID를 가져옵니다.
           const uid = auth.currentUser.uid;
           // 현재 위치와 Firebase의 kindergartenlocation을 비교합니다.
-          await updateInGartenStatus(latitude, longitude, uid);
+          updateInGartenStatus(latitude, longitude, uid); //<--- 안된?
         },
         error => {
           console.error('Location update error:', error);
@@ -315,7 +319,6 @@ export default function Maps() {
         {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000},
       );
     };
-    const locationUpdateInterval1 = setInterval(updateCurrentLocation, 600000); // 10분마다 위치 업데이트
     // 사용자 직업 정보 가져오기
     const fetchUserJob = async () => {
       try {
@@ -327,15 +330,6 @@ export default function Maps() {
           const job = userDocSnap.data().job;
           setJobInfo(jobDetails[job]);
           setClassData(userDocSnap.data.class);
-
-          // 학생인 경우에만 위치 업데이트 인터벌을 설정합니다.
-          if (job === '학생') {
-            const locationUpdateInterval = setInterval(
-              updateCurrentLocation,
-              600000,
-            ); // 10분마다 위치 업데이트
-            return () => clearInterval(locationUpdateInterval);
-          }
         }
       } catch (error) {
         console.error("Error fetching user's job:", error);
@@ -475,7 +469,6 @@ export default function Maps() {
 
     // 컴포넌트 언마운트 시 실행될 코드
     return () => {
-      clearInterval(locationUpdateInterval1);
       clearInterval(locationUpdateInterval);
       locationUpdateUnsubscribe();
     };

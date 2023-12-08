@@ -119,7 +119,17 @@ const SignUpScreen = ({navigation}) => {
         return;
       }
     }
-
+    // 이름을 기준으로 선택된 유치원 객체 찾기
+    let selectedKinderInfo = null;
+    if (inputJob === '학생' && selectedKindergarten) {
+      selectedKinderInfo = kindergartens.find(
+        kinder => kinder.id === selectedKindergarten,
+      );
+      if (!selectedKinderInfo) {
+        Alert.alert('오류', '유치원을 선택해 주세요');
+        return;
+      }
+    }
     // Firebase 인증을 사용하여 사용자 계정 생성
     try {
       const userCredential = await createUserWithEmailAndPassword(
@@ -143,7 +153,23 @@ const SignUpScreen = ({navigation}) => {
           timestamp: '', // timestamp를 빈 문자열로 설정
         },
       };
-
+      // 사용자가 학생인 경우 선택한 유치원 정보 추가
+      if (inputJob === '학생' && selectedKinderInfo) {
+        console.log('-----------------------------------------------------');
+        userData.kindergarten = selectedKinderInfo.name;
+        // 유치원의 위치 정보 추가
+        // 데이터 구조에 맞게 location 필드가 객체 형태로 저장되어야 합니다.
+        userData.kindergartenlocation = {
+          latitude: selectedKinderInfo.location.latitude,
+          longitude: selectedKinderInfo.location.longitude,
+        };
+        console.log(`Selected kindergarten's name: ${selectedKinderInfo.name}`);
+        console.log(
+          `Selected kindergarten's location: ${JSON.stringify(
+            selectedKinderInfo.location,
+          )}`,
+        );
+      }
       // Firestore에 사용자 문서 생성
       await setDoc(doc(firestore, 'users', userCredential.user.uid), userData);
 
