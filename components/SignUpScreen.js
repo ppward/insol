@@ -22,14 +22,13 @@ import {
   query,
   collection,
   where,
-  getDoc,
   getDocs,
   setDoc,
   doc,
 } from 'firebase/firestore';
 
 const SignUpScreen = ({navigation}) => {
-  const [modalVisible, setModalVisible] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false); //모달의 상태를 확인하기 위한 useStata 변수
   const [inputEmail, setInputEmail] = useState('');
   const [inputPassword, setInputPassword] = useState('');
   const [inputName, setInputName] = useState('');
