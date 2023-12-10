@@ -405,29 +405,7 @@ export default function Schedule() {
               <Text style={styles.headerText}>일정</Text>
             </View>
           </View>
-        )}
       </View>
-
-      {/*userData.job === '선생님' && (
-        <View style={{position: 'absolute', zIndex: 1, right: 20, top: 80}}>
-          <TouchableOpacity
-            style={{
-              width: 60,
-              height: 40,
-              alignItems: 'center',
-              justifyContent: 'center',
-              backgroundColor: '#4CAF50',
-              borderRadius: 15,
-            }}
-            onPress={() => {
-              setModalState(true);
-            }}>
-            <View>
-              <Text style={{fontWeight: 'bold'}}>추가</Text>
-            </View>
-          </TouchableOpacity>
-        </View>
-          )*/}
       <View style={styles.calendarContainer}>
         <Calendar
           style={{padding: 0, margin: 0, borderRadius: 15, height: 355}}
