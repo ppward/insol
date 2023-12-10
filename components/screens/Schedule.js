@@ -17,13 +17,8 @@ import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import {auth, firestore} from '../Firebase';
 import {
   doc,
-  getDoc,
   setDoc,
   collection,
-  query,
-  where,
-  onSnapshot,
-  getDocs,
   deleteDoc,
 } from 'firebase/firestore';
 import {fetchUserData, getUserDataSync, fetchSchedules} from '../FetchData';
@@ -63,13 +58,6 @@ export default function Schedule() {
     };
     fetchSchedule();
   }, []);
-  // useEffect(async () => {
-  //   if (userData) {
-  //     const fetchSchedules = await fetchSchedules(userData.class);
-  //     setSchedules(fetchSchedules);
-  //   }
-  // }, [userData]);
-
   const showStartTimePicker = () => {
     setStartTimePickerVisibility(true);
   };

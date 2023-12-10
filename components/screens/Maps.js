@@ -93,17 +93,6 @@ export default function Maps() {
     setJobInfo(jobDetails[data.job]);
     console.log('컴포넌트화 된 데이터:', data);
   }, []);
-
-  // const fetchUserJob = async uid => {
-  //   const userDocRef = doc(firestore, 'users', uid);
-  //   const userDocSnap = await getDoc(userDocRef);
-  //   if (userDocSnap.exists()) {
-  //     const job = userDocSnap.data().job;
-  //     setJobInfo(jobDetails[job]);
-  //     setClassData(userDocSnap.data().class);
-  //   }
-  // };
-
   // 현재 위치를 업데이트하고 `jobInfo`가 '학생'일 때 유치원 도착 여부를 확인하는 함수
   const updateUserLocationAndStatus = async uid => {
     Geolocation.getCurrentPosition(
