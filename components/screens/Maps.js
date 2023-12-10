@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import MapView, {Marker, PROVIDER_GOOGLE} from 'react-native-maps';
 import Geolocation from '@react-native-community/geolocation';
-import {auth, firestore, signOut} from '../Firebase';
+import {auth, firestore} from '../Firebase';
 import {
   doc,
   getDoc,
@@ -25,6 +25,7 @@ import {
 } from 'firebase/firestore';
 import {useNavigation} from '@react-navigation/native';
 import {CheckBox} from '@rneui/themed';
+import {fetchUserData, getUserDataSync} from '../FetchData';
 
 // 직업별 이미지와 텍스트 정보
 const jobDetails = {
@@ -81,24 +82,70 @@ export default function Maps() {
   const [classData, setClassData] = useState('');
   const [attend, setAttend] = useState(false);
   const [studentEmail, setStudentEmail] = useState('');
+  const [reach, setReach] = useState(false);
+  const [userData, setUserData] = useState({});
   const navigation = useNavigation();
+
+  useEffect(async () => {
+    await fetchUserData();
+    const data = getUserDataSync();
+    setUserData(data);
+    setJobInfo(jobDetails[data.job]);
+    console.log('컴포넌트화 된 데이터:', data);
+  }, []);
+
+  // const fetchUserJob = async uid => {
+  //   const userDocRef = doc(firestore, 'users', uid);
+  //   const userDocSnap = await getDoc(userDocRef);
+  //   if (userDocSnap.exists()) {
+  //     const job = userDocSnap.data().job;
+  //     setJobInfo(jobDetails[job]);
+  //     setClassData(userDocSnap.data().class);
+  //   }
+  // };
+
+  // 현재 위치를 업데이트하고 `jobInfo`가 '학생'일 때 유치원 도착 여부를 확인하는 함수
+  const updateUserLocationAndStatus = async uid => {
+    Geolocation.getCurrentPosition(
+      async position => {
+        const {latitude, longitude} = position.coords;
+        setCurrentPosition({
+          latitude,
+          longitude,
+          latitudeDelta: 0.005,
+          longitudeDelta: 0.005,
+        });
+        updateLocationInFirebase(latitude, longitude);
+        if (userData.job === '학생') {
+          updateInGartenStatus(latitude, longitude, uid);
+        }
+      },
+      error => {
+        console.error(error);
+      },
+      {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000},
+    );
+  };
+
   const handleLogout = () => {
-    // Display a confirmation dialog
     Alert.alert(
-      'Log Out', // Alert Title
-      'Are you sure you want to log out?', // Alert Message
+      '로그아웃', // 알림 타이틀
+      '정말 로그아웃 하시겠습니까?', // 알림 메세지
       [
         {
-          text: 'Cancel',
+          text: '아니요',
           onPress: () => console.log('Cancel Pressed'),
           style: 'cancel',
         },
         {
-          text: 'Yes',
+          text: '네',
           onPress: async () => {
             try {
               await auth.signOut();
-              navigation.navigate('Intro');
+              navigation.reset({
+                index: 0,
+                routes: [{name: 'Intro'}],
+              });
             } catch (error) {
               console.error('Error signing out: ', error);
             }
@@ -133,11 +180,8 @@ export default function Maps() {
     currentLongitude,
     uid,
   ) => {
-    // jobInfo 상태를 확인하여 '학생'인 경우에만 함수 실행
-    console.log('jobinfoText=', jobInfo.text);
-    console.log('jobinfo=', jobInfo);
-
-    if (jobInfo && jobInfo.text === '학생') {
+    // jobInfo 상태를 확인하여 '학생'인 경우에만 함수
+    if (userData.job === '학생') {
       const userDocRef = doc(firestore, 'users', uid);
       const userDocSnap = await getDoc(userDocRef);
       console.log('----=-=-=-=-=');
@@ -167,6 +211,30 @@ export default function Maps() {
     }
     console.log('.........');
   };
+
+  // `jobInfo` 상태가 업데이트된 후에 위치 정보를 업데이트하는 useEffect
+  useEffect(() => {
+    let locationUpdateInterval;
+
+    const uid = auth.currentUser?.uid;
+    if (uid && jobInfo) {
+      // Call the function immediately to update status as soon as jobInfo is available
+      updateUserLocationAndStatus(uid);
+
+      // Then set up the interval to continue updating every 30 seconds
+      locationUpdateInterval = setInterval(() => {
+        updateUserLocationAndStatus(uid);
+      }, 30000); // Interval set for 30 seconds
+    }
+
+    // Clear interval when component unmounts or jobInfo changes
+    return () => {
+      if (locationUpdateInterval) {
+        clearInterval(locationUpdateInterval);
+      }
+    };
+  }, [jobInfo]);
+
   useEffect(() => {
     //학생 출석체크
     const uid = auth.currentUser.uid;
@@ -199,6 +267,7 @@ export default function Maps() {
     // This will unsubscribe from the document when the component unmounts
     return () => unsubscribe();
   }, [currentUID]);
+
   useEffect(() => {
     // 유치원 도착알림
     if (studentEmail.length !== 0) {
@@ -223,6 +292,7 @@ export default function Maps() {
       return () => unsubscribe();
     }
   }, [studentEmail]);
+
   useEffect(() => {
     const fetchSchedules = async () => {
       if (classData !== '') {
@@ -307,7 +377,7 @@ export default function Maps() {
           // 현재 사용자의 UID를 가져옵니다.
           const uid = auth.currentUser.uid;
           // 현재 위치와 Firebase의 kindergartenlocation을 비교합니다.
-          updateInGartenStatus(latitude, longitude, uid); //<--- 안된?
+          updateInGartenStatus(latitude, longitude, uid);
         },
         error => {
           console.error('Location update error:', error);
@@ -315,23 +385,6 @@ export default function Maps() {
         {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000},
       );
     };
-    // 사용자 직업 정보 가져오기
-    const fetchUserJob = async () => {
-      try {
-        const uid = auth.currentUser.uid;
-        const userDocRef = doc(firestore, 'users', uid);
-        const userDocSnap = await getDoc(userDocRef);
-
-        if (userDocSnap.exists()) {
-          const job = userDocSnap.data().job;
-          setJobInfo(jobDetails[job]);
-          setClassData(userDocSnap.data.class);
-        }
-      } catch (error) {
-        console.error("Error fetching user's job:", error);
-      }
-    };
-
     // 필터링된 사용자 위치 데이터 가져오기
     const fetchFilteredUsers = async () => {
       try {
@@ -347,13 +400,13 @@ export default function Maps() {
           } = userDocSnap.data();
           let usersQuery;
           setClassData(userClass);
-          if (['선생님', '버스기사'].includes(userJob)) {
+          if (['선생님', '버스기사'].includes(userData.job)) {
             usersQuery = query(
               collection(firestore, 'users'),
               where('job', '==', '학생'),
               where('class', '==', userClass),
             );
-          } else if (userJob === '학부모') {
+          } else if (userData.job === '학부모') {
             // 자녀(학생) 조회
             setStudentEmail(userDocSnap.data().studentEmail);
             const studentsQuery = query(
@@ -517,8 +570,8 @@ export default function Maps() {
                   title={user.name || 'Unknown'}
                   image={
                     jobInfo && jobInfo.text === '학생'
-                      ? require('../../image/markerImage/teacher.png')
-                      : require('../../image/markerImage/boy.png')
+                      ? require('../../image/markerImage/teacher_marker.png')
+                      : require('../../image/markerImage/boy_marker.png')
                   }
                 />
               ),
@@ -533,7 +586,7 @@ export default function Maps() {
                     longitude: item.location.longitude,
                   }}
                   title={item.address || 'Unknown'}
-                  image={require('../../image/markerImage/calendar.png')}
+                  image={require('../../image/markerImage/calendar_marker.png')}
                 />
               )
             );

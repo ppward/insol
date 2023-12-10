@@ -26,7 +26,7 @@ import {
   getDocs,
   deleteDoc,
 } from 'firebase/firestore';
-
+import {fetchUserData, getUserDataSync, fetchSchedules} from '../FetchData';
 const API_KEY = 'AIzaSyC3k7HBbhN327lvM3fyx006TZ3bHcYS9KY';
 const itWidth = Dimensions.get('window').width;
 const initialCoord = {
@@ -39,7 +39,6 @@ const initialCoord = {
 export default function Schedule() {
   const [selected, setSelected] = useState('');
   const [schedules, setSchedules] = useState([]);
-
   const [address, setAddress] = useState('');
   const [description, setDescription] = useState('');
   const [coord, setCoord] = useState(initialCoord);
@@ -52,53 +51,24 @@ export default function Schedule() {
   const [endTime, setEndTime] = useState('');
 
   useEffect(() => {
-    const fetchUserData = async () => {
+    const fetchSchedule = async () => {
       try {
-        const uid = auth.currentUser.uid;
-        const userDocRef = doc(firestore, 'users', uid);
-        const userDocSnap = await getDoc(userDocRef);
-        if (userDocSnap.exists()) {
-          setUserData(userDocSnap.data());
-          console.log(userDocSnap.data().class);
-        } else {
-          console.error('No such Document');
-        }
+        const userData = getUserDataSync();
+        const schedulesData = await fetchSchedules(userData.class);
+        setSchedules(schedulesData);
       } catch (error) {
-        console.error('Error such Document : ', error);
+        console.error('Error fetching schedules:', error);
+        // Handle the error as needed, possibly setting some state to show an error message
       }
     };
-    fetchUserData();
+    fetchSchedule();
   }, []);
-  useEffect(() => {
-    const fetchSchedules = async () => {
-      try {
-        const q = query(
-          collection(firestore, 'schedules'),
-          where('class', '==', userData.class),
-        );
-        const querySnapshot = await getDocs(q);
-
-        // Check if the querySnapshot has any documents
-        if (querySnapshot.size === 0) {
-          // If no documents are found, set schedules to an empty array
-          setSchedules([]);
-        } else {
-          // If documents are found, map over them and set schedules
-          const schedulesData = querySnapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data(),
-          }));
-          setSchedules(schedulesData);
-        }
-      } catch (error) {
-        console.error('Error occurred while retrieving schedule: ', error);
-        setSchedules([]); // Also set to empty if there is an error fetching schedules
-      }
-    };
-    if (userData.class) {
-      fetchSchedules();
-    }
-  }, [userData]);
+  // useEffect(async () => {
+  //   if (userData) {
+  //     const fetchSchedules = await fetchSchedules(userData.class);
+  //     setSchedules(fetchSchedules);
+  //   }
+  // }, [userData]);
 
   const showStartTimePicker = () => {
     setStartTimePickerVisibility(true);
@@ -404,10 +374,37 @@ export default function Schedule() {
   };
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.headerContainer}>
-        <Text style={styles.headerText}>일정 </Text>
+      <View
+        style={{
+          width: '100%',
+          height: 55,
+          flexDirection: 'row', // Direction of children alignment
+          alignItems: 'center', // Align children vertically in the center
+        }}>
+        <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+          <View style={{...styles.headerContainer, marginLeft: 55}}>
+            <Text style={styles.headerText}>일정</Text>
+          </View>
+        </View>
+
+        <TouchableOpacity
+          style={{paddingRight: 10}}
+          onPress={() => setModalState(true)}>
+          <View
+            style={{
+              borderRadius: 15,
+              backgroundColor: '#4E9F3D',
+              width: 40,
+              height: 25,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+            <Text style={{color: 'white'}}>추가</Text>
+          </View>
+        </TouchableOpacity>
       </View>
-      {userData.job === '선생님' && (
+
+      {/*userData.job === '선생님' && (
         <View style={{position: 'absolute', zIndex: 1, right: 20, top: 80}}>
           <TouchableOpacity
             style={{
@@ -426,7 +423,7 @@ export default function Schedule() {
             </View>
           </TouchableOpacity>
         </View>
-      )}
+          )*/}
       <View style={styles.calendarContainer}>
         <Calendar
           style={{padding: 0, margin: 0, borderRadius: 15, height: 355}}

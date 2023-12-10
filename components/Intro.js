@@ -1,4 +1,4 @@
-import React, {useRef, useState, useCallback} from 'react';
+import React, {useRef, useState, useEffect} from 'react';
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import {
   TouchableWithoutFeedback,
   KeyboardAvoidingView,
   Platform,
+  LogBox,
 } from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import {Modalize} from 'react-native-modalize';
@@ -92,7 +93,10 @@ export default function Intro() {
       );
       // console.log('Logged in with:', userCredential.user);
       modalizeRef.current?.close();
-      navigation.navigate('Tab'); // Replace with your map screen route name
+      navigation.reset({
+        index: 0,
+        routes: [{name: 'Tab'}],
+      });
     } catch (error) {
       Alert.alert('Login failed', error.message);
     }
