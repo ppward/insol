@@ -75,7 +75,10 @@ const SignUpScreen = ({navigation}) => {
 
   const handleSignUp = async () => {
     // 입력값 기본 유효성 검사
-    if (!inputEmail.includes('@')) {
+    if (
+      !inputEmail.includes('@naver.com') ||
+      !inputEmail.includes('@naver.com')
+    ) {
       Alert.alert('오류', '이메일 형식이 잘못되었습니다');
       return;
     }
@@ -143,6 +146,10 @@ const SignUpScreen = ({navigation}) => {
         email: inputEmail,
         name: inputName,
         job: inputJob,
+        location: {
+          latitude: 36.835111,
+          longitude: 127.179445,
+        },
         class: inputClass,
         class: inputJob === '학부모' ? studentClass : inputClass,
         // 학부모의 경우 studentEmail을 저장하고, 그렇지 않은 경우 null을 저장

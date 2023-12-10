@@ -40,7 +40,7 @@ export default function TabNav() {
     <Tab.Navigator initialRouteName="Map" screenOptions={{headerShown: false}}>
       {userRole === '선생님' && (
         <Tab.Screen
-          name="StudentsList"
+          name="학생명단"
           component={StudentList}
           options={{
             tabBarIcon: () => (
@@ -54,7 +54,7 @@ export default function TabNav() {
       )}
       {userRole === '버스기사' && (
         <Tab.Screen
-          name="BusList"
+          name="탑승명단"
           component={BusList}
           options={{
             tabBarIcon: () => (
@@ -67,7 +67,7 @@ export default function TabNav() {
         />
       )}
       <Tab.Screen
-        name="Map"
+        name="지도"
         component={Maps}
         options={{
           tabBarIcon: () => (
@@ -79,7 +79,7 @@ export default function TabNav() {
         }}
       />
       <Tab.Screen
-        name="Schedule"
+        name="일정"
         component={Schedule}
         options={{
           tabBarIcon: () => (

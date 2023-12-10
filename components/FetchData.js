@@ -35,7 +35,7 @@ export const getUserDataSync = () => {
   return userDataCache; //값을 반환하는 함수
 };
 
-export const fetchSchedules = async classNum => {
+export const fetchScheduleLists = async classNum => {
   let schedules = []; // Initialize schedules as an empty array
   try {
     const q = query(

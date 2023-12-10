@@ -15,13 +15,8 @@ import MapView, {PROVIDER_GOOGLE} from 'react-native-maps';
 import {Calendar} from 'react-native-calendars';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import {auth, firestore} from '../Firebase';
-import {
-  doc,
-  setDoc,
-  collection,
-  deleteDoc,
-} from 'firebase/firestore';
-import {fetchUserData, getUserDataSync, fetchSchedules} from '../FetchData';
+import {doc, setDoc, collection, deleteDoc} from 'firebase/firestore';
+import {getUserDataSync, fetchScheduleLists} from '../FetchData';
 const API_KEY = 'AIzaSyC3k7HBbhN327lvM3fyx006TZ3bHcYS9KY';
 const itWidth = Dimensions.get('window').width;
 const initialCoord = {
@@ -38,7 +33,7 @@ export default function Schedule() {
   const [description, setDescription] = useState('');
   const [coord, setCoord] = useState(initialCoord);
   const [modelState, setModalState] = useState(false);
-  const [userData, setUserData] = useState({});
+  const [user_data, setUser_data] = useState({});
   const [isStartTimePickerVisible, setStartTimePickerVisibility] =
     useState(false);
   const [isEndTimePickerVisible, setEndTimePickerVisibility] = useState(false);
@@ -49,15 +44,17 @@ export default function Schedule() {
     const fetchSchedule = async () => {
       try {
         const userData = getUserDataSync();
-        const schedulesData = await fetchSchedules(userData.class);
+        const schedulesData = await fetchScheduleLists(userData.class);
+        setUser_data(userData);
         setSchedules(schedulesData);
       } catch (error) {
         console.error('Error fetching schedules:', error);
-        // Handle the error as needed, possibly setting some state to show an error message
+        // 에러메세지 출력
       }
     };
     fetchSchedule();
   }, []);
+  //시작시간 선택기를 보여주는 함수
   const showStartTimePicker = () => {
     setStartTimePickerVisibility(true);
   };
@@ -204,7 +201,7 @@ export default function Schedule() {
     };
     try {
       const docRef = doc(collection(firestore, 'schedules'));
-      await setDoc(docRef, {...newSchedule, class: userData.class}); // 파이어베이스 데이타 추가
+      await setDoc(docRef, {...newSchedule, class: user_data.class}); // 파이어베이스 데이타 추가
       setSchedules(prevSchedules => [
         ...prevSchedules,
         {...newSchedule, id: docRef.id},
@@ -311,7 +308,7 @@ export default function Schedule() {
       return null; // or return a placeholder component
     }
     const handleLongPress = () => {
-      if (userData.job === '선생님') {
+      if (user_data.job === '선생님') {
         Alert.alert('일정 삭제', '현재 선택한 일정을 삭제하시겠습니까?', [
           // Button array
           {
@@ -327,7 +324,7 @@ export default function Schedule() {
       }
     };
     const handlePress = () => {
-      if (userData.job === '선생님') {
+      if (user_data.job === '선생님') {
         openEditModal(item.id);
       }
     };
@@ -362,6 +359,38 @@ export default function Schedule() {
   };
   return (
     <SafeAreaView style={styles.container}>
+      {user_data.job && user_data.job == '선생님' && (
+        <View
+          style={{
+            width: '100%',
+            height: 55,
+            flexDirection: 'row', // Direction of children alignment
+            alignItems: 'center', // Align children vertically in the center
+          }}>
+          <View
+            style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+            <View style={{...styles.headerContainer, marginLeft: 50}}>
+              <Text style={styles.headerText}>일정</Text>
+            </View>
+          </View>
+
+          <TouchableOpacity
+            style={{paddingRight: 10}}
+            onPress={() => setModalState(true)}>
+            <View
+              style={{
+                borderRadius: 15,
+                backgroundColor: '#4E9F3D',
+                width: 40,
+                height: 25,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}>
+              <Text style={{color: 'white'}}>추가</Text>
+            </View>
+          </TouchableOpacity>
+        </View>
+      )}
       <View
         style={{
           width: '100%',
@@ -369,27 +398,14 @@ export default function Schedule() {
           flexDirection: 'row', // Direction of children alignment
           alignItems: 'center', // Align children vertically in the center
         }}>
-        <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-          <View style={{...styles.headerContainer, marginLeft: 55}}>
-            <Text style={styles.headerText}>일정</Text>
-          </View>
-        </View>
-
-        <TouchableOpacity
-          style={{paddingRight: 10}}
-          onPress={() => setModalState(true)}>
+        {user_data && user_data.job !== '선생님' && (
           <View
-            style={{
-              borderRadius: 15,
-              backgroundColor: '#4E9F3D',
-              width: 40,
-              height: 25,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}>
-            <Text style={{color: 'white'}}>추가</Text>
+            style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+            <View style={styles.headerContainer}>
+              <Text style={styles.headerText}>일정</Text>
+            </View>
           </View>
-        </TouchableOpacity>
+        )}
       </View>
 
       {/*userData.job === '선생님' && (
