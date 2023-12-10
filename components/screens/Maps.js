@@ -108,8 +108,6 @@ export default function Maps() {
       {cancelable: false}, // This prevents the alert from being dismissed by tapping outside of it
     );
   };
-  // 헤더 버튼 클릭 핸들러
-  luetoothScan();
 
   function getDistanceFromLatLonInM(lat1, lon1, lat2, lon2) {
     const R = 6371; // 지구의 반지름 (km)
@@ -459,15 +457,10 @@ export default function Maps() {
 
     // 컴포넌트 마운트 시 실행되는 코드
     requestLocationPermission();
-    fetchUserJob();
     fetchFilteredUsers();
-
-    const locationUpdateInterval = setInterval(updateCurrentLocation, 30000); // 10분마다 위치 업데이트
     const locationUpdateUnsubscribe = subscribeToLocationUpdates();
-
     // 컴포넌트 언마운트 시 실행될 코드
     return () => {
-      clearInterval(locationUpdateInterval);
       locationUpdateUnsubscribe();
     };
   }, []);

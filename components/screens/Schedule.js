@@ -148,7 +148,6 @@ export default function Schedule() {
     setAddress(predict);
   };
   const handleQueryChange = async value => {
-    //아직 해야함.
     setAddress(value);
     try {
       const response = await fetch(
