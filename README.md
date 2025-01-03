@@ -1,7 +1,7 @@
 # Insol
 ## _아이들의 안전한 귀가를 위한 위치공유 어플리케이션 "인솔"_
 > 이 앱은 reactnative cli    "0.72.4" 버전으로 작성되어있으며 이는 이 이후의 버전과 다르게 빌드 되었습니다.
-<img width="300" alt="스크린샷 2023-09-22 오후 11 32 48" src="https://github.com/user-attachments/assets/cb4ffb6f-e539-4a22-a98f-336b22ee7c6c" />  
+<img width="300" alt="스크린샷 2023-09-22 오후 11 32 48" src="https://github.com/user-attachments/assets/cb4ffb6f-e539-4a22-a98f-336b22ee7c6c" /> <br><br>
 
 
 
@@ -11,8 +11,12 @@
 | 회원가입 페이지         | 회원가입 후 입력    |
 
 
-   <img width="287" alt="스크린샷 2025-01-03 오후 4 53 06" src="https://github.com/user-attachments/assets/c10e7923-b4bf-4e83-98bb-f8225e664c8a"/> 
-   <img width="291" alt="스크린샷 2025-01-03 오후 4 53 53" src="https://github.com/user-attachments/assets/167826f7-49f7-4e9f-9c80-07af0573c56f" />
+| Preview          | -   |
+|------------------|---------------------|
+| <img width="287" alt="스크린샷 2025-01-03 오후 4 53 06" src="https://github.com/user-attachments/assets/c10e7923-b4bf-4e83-98bb-f8225e664c8a"/>  | <img width="291" alt="스크린샷 2025-01-03 오후 4 53 53" src="https://github.com/user-attachments/assets/167826f7-49f7-4e9f-9c80-07af0573c56f" /> | 
+| 선생님이 보는 화면       | 학생이 보는 화면   |
+
+ 
 
 
 
