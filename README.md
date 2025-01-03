@@ -7,7 +7,7 @@
 
 | Preview          | -   |
 |------------------|---------------------|
-| <img width="150" alt="스크린샷 2023-11-13 오전 10 30 11" src="https://github.com/user-attachments/assets/5ee8d17f-8d7d-4a2c-84f9-c099a1bee4eb" />   | <img width="150" alt="스크린샷 2023-11-16 오전 12 34 18" src="https://github.com/user-attachments/assets/0fe53160-f9e5-4be9-8386-1c95e6e9f7ac" /> | 
+| <img width="287" alt="스크린샷 2023-11-13 오전 10 30 11" src="https://github.com/user-attachments/assets/5ee8d17f-8d7d-4a2c-84f9-c099a1bee4eb" />   | <img width="287" alt="스크린샷 2023-11-16 오전 12 34 18" src="https://github.com/user-attachments/assets/0fe53160-f9e5-4be9-8386-1c95e6e9f7ac" /> | 
 | 회원가입 페이지         | 회원가입 후 입력    |
 
 
