@@ -5,11 +5,11 @@
 
 
 
-| Feature          | Description         | Preview                           |
-|------------------|---------------------|-----------------------------------|
-| <img width="150" alt="스크린샷 2023-11-13 오전 10 30 11" src="https://github.com/user-attachments/assets/5ee8d17f-8d7d-4a2c-84f9-c099a1bee4eb" />   | <img width="150" alt="스크린샷 2023-11-16 오전 12 34 18" src="https://github.com/user-attachments/assets/0fe53160-f9e5-4be9-8386-1c95e6e9f7ac" /> | <img width="150" alt="스크린샷 2023-11-16 오전 12 39 25" src="https://github.com/user-attachments/assets/aeed2cf8-b052-431a-abed-d126bb3f1783" /> |
-| 회원가입 페이지         | 회원가입 후 이력   | <img src="image2.png" width="100"/> |
-| Feature 3        | 더 많은 설명입니다.| <img src="image3.png" width="100"/> |
+| Preview          | -   |
+|------------------|---------------------|
+| <img width="150" alt="스크린샷 2023-11-13 오전 10 30 11" src="https://github.com/user-attachments/assets/5ee8d17f-8d7d-4a2c-84f9-c099a1bee4eb" />   | <img width="150" alt="스크린샷 2023-11-16 오전 12 34 18" src="https://github.com/user-attachments/assets/0fe53160-f9e5-4be9-8386-1c95e6e9f7ac" /> | 
+| 회원가입 페이지         | 회원가입 후 입력    |
+
 
    <img width="287" alt="스크린샷 2025-01-03 오후 4 53 06" src="https://github.com/user-attachments/assets/c10e7923-b4bf-4e83-98bb-f8225e664c8a"/> 
    <img width="291" alt="스크린샷 2025-01-03 오후 4 53 53" src="https://github.com/user-attachments/assets/167826f7-49f7-4e9f-9c80-07af0573c56f" />
