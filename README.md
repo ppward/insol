@@ -1,7 +1,7 @@
 # Insol
 ## _아이들의 안전한 귀가를 위한 위치공유 어플리케이션 "인솔"_
-> 이 앱은 reactnative cli    "0.72.4" 버전으로 작성되어있으며 이는 이 이후의 버전과 다르게 빌드 되었습니다.
-<img width="300" alt="스크린샷 2023-09-22 오후 11 32 48" src="https://github.com/user-attachments/assets/cb4ffb6f-e539-4a22-a98f-336b22ee7c6c" /> <br>
+> 이 앱은 reactnative cli    "0.72.4" 버전으로 작성되어있으며 이는 이 이후의 버전과 다르게 빌드 되었습니다.  
+<img width="300" alt="스크린샷 2023-09-22 오후 11 32 48" src="https://github.com/user-attachments/assets/cb4ffb6f-e539-4a22-a98f-336b22ee7c6c" />  
 
 
 
