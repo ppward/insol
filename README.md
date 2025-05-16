@@ -18,12 +18,14 @@
 
 ## 기술 스택
 ### language & Framework
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+![javascript](https://img.shields.io/badge/javascript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=000000)
+![reactnative](https://img.shields.io/badge/reactnative-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
 
 ### Database
+![firebase](https://img.shields.io/badge/firebase-4285F4?style=for-the-badge&logo=firebase&logoColor=white)
 
 ### Tools
-
+![git](https://img.shields.io/badge/git-F05032?style=for-the-badge&logo=git&logoColor=white)
 ## 프로젝트 화면구성
 
 | Preview          | -   |
