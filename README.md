@@ -2,29 +2,30 @@
 > 이 앱은 reactnative cli    "0.72.4" 버전으로 작성되어있으며 이는 이 이후의 버전과 다르게 빌드 되었습니다.
 </br>
 
-## 프로젝트 소개
+## 📌 프로젝트 소개
 **인솔(insol)**은 아이들의 안전한 귀가와 유치원과 학부모간의 커뮤니티 기능을 하는 플랫폼으로, 
-실시간 GPS위치 업데이트를 통해서 아이들의 위치와 가족
+맞벌이 가구의 증가와 돌봄 서비스의 수요가 지속적으로 증가함에 따라, 만 8세 미만의 자녀를 가진 학부모에게 유치원(어린이집) 간의 유기적인 소통을 위한 집중화 서비스를 목적으로 개발되었습니다.
 
 </br>
-## 프로젝트 목적
 
-## 주요 기능
-### 1.
-### 2. 
+## 📌 프로젝트 목적
+
+## 📌 주요 기능
+### 1.유치원 등하원 위치확인 및 알림
+### 2.유치원과 학부모의 커뮤니케이션 플랫폼
 ### 3.
 
 </br>
 
-## 기술 스택
-### language & Framework
+## 🛠️ 기술 스택
+### ⚡️ language & Framework
 ![javascript](https://img.shields.io/badge/javascript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=000000)
 ![reactnative](https://img.shields.io/badge/reactnative-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
 
-### Database
+### 💾 Database
 ![firebase](https://img.shields.io/badge/firebase-4285F4?style=for-the-badge&logo=firebase&logoColor=white)
 
-### Tools
+### 🛠️ Tools
 ![git](https://img.shields.io/badge/git-F05032?style=for-the-badge&logo=git&logoColor=white)
 ## 프로젝트 화면구성
 
@@ -35,7 +36,7 @@
 | <img width="287" alt="스크린샷 2025-01-03 오후 4 53 06" src="https://github.com/user-attachments/assets/c10e7923-b4bf-4e83-98bb-f8225e664c8a"/>  | <img width="291" alt="스크린샷 2025-01-03 오후 4 53 53" src="https://github.com/user-attachments/assets/167826f7-49f7-4e9f-9c80-07af0573c56f" /> | 
 | 선생님이 보는 화면       | 학생이 보는 화면   |
 
-## 팀원소개 
+## 👋️ 팀원소개 
 | 이름  | 역할  |
 | --- | --- |
 | [박기표](https://github.com/ppward) | Frontend, Backend |
