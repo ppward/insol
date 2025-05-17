@@ -8,7 +8,7 @@
 
 </br>
 
-## 📌 프로젝트 목적
+## 🚀 프로젝트 목적
 - 보육 사각지대 해소: 아이의 위치 확인 및 등하원 알림을 통해 실시간 안전 확보
 - 쌍방향 커뮤니케이션 강화: 유치원과 학부모 간의 정보 전달, 소통 효율성 증대
 - 스마트한 보육환경 제공: 일정, 출결, 사진 공유 등 다양한 학급 관리 기능 제공
@@ -30,7 +30,7 @@
 
 </br>
 
-## 🛠️ 기술 스택
+## 📦  기술 스택
 ### ⚡️ language & Framework
 ![javascript](https://img.shields.io/badge/javascript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=000000)
 ![reactnative](https://img.shields.io/badge/reactnative-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
@@ -40,8 +40,8 @@
 
 ### 🛠️ Tools
 ![git](https://img.shields.io/badge/git-F05032?style=for-the-badge&logo=git&logoColor=white)
-## 프로젝트 화면구성
 
+## 📱 프로젝트 화면구성
 | 화면이름          | previews  |
 |------------------|---------------------|
 | 회원가입 페이지   | <img width="287" alt="스크린샷 2023-11-13 오전 10 30 11" src="https://github.com/user-attachments/assets/5ee8d17f-8d7d-4a2c-84f9-c099a1bee4eb" />   |
